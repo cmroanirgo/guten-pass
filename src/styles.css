@@ -1,0 +1,4 @@
+
+body#popup { min-width: 200px; font-size: 12pt;padding:5px;}
+body#popup input { min-width: 100%; }
+body#popup #source { margin-top:0.8em; font-size: 0.6em;}

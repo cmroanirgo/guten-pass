@@ -1,0 +1,22 @@
+
+/* Gutenberg's normal text file */
+td[property="dcterms:format"][content*="text/plain"] a[href] {
+}
+
+.wordish-add-text {
+	margin-left: 20px;
+	font-size: 1.1em;
+	font-weight:bold;
+	padding:10px;
+	background-color:#808080;
+	border-radius: 5px;
+	box-shadow: 3px 3px 5px rgba(0,0,0,0.4);
+}
+
+.wordish-add-text img {
+	vertical-align: bottom;
+}
+.wordish-add-text:hover {
+	background-color:#a0a0a0;
+	box-shadow: none;
+};
