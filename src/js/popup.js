@@ -10,7 +10,7 @@
 */
 
 const ext = require("./webext");
-const Wordish = require('Wordish');
+const Wordish = require('./libs/dict');
 const $ = ext.$;
 const storage = ext.storage;
 const known_sources = require('./sources/gutenberg');// TODO. If more than 1 source collate
@@ -44,7 +44,9 @@ function generate(options, cb) {
 		log(options, "Randomly chose: '"+source.name+"' by " + source.author + ". url: " + source.url)
 		options.url = source.url;
 	}
-	options.base_url = "https://cors-anywhere.herokuapp.com/" + known_sources.base_url;
+
+	// TODO. This is needed for chrome. Fails on Firefox
+	options.base_url = "https://cors-anywhere.herokuapp.com/" + encodeURI(known_sources.base_url);
 	options.cache = _global_popup_cache;
 	options.cacheCallback = function(url, obj) {
 		_global_popup_cache[url] = obj;

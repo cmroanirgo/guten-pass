@@ -13,12 +13,12 @@
 		// look for the line:
 		// *** START OF THE PROJECT GUTENBERG ..... ***
 		// and remove everything leading up to (and including) it.
-		const maxlen = 1024*30;
+		const maxlen = 1024*300;
 		if (text.length>maxlen) {
 			console.log('text has been limited to ' + maxlen + ' chars')
 			text = text.substring(0, maxlen); // max 4K
 		}
-		text = text.replace(/[\s\S]+START OF THE PROJECT GUTENBERG.*?\*{3,}/ig, '');
+		text = text.replace(/[\s\S]+START OF THE PROJECT GUTENBERG.*?\*{3,}/i, '');
 		return defaultValidator(text);
 	}
 
