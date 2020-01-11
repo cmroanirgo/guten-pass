@@ -10,8 +10,10 @@
 */
 
 const ext = require("./webext");
-const Dict = require('./libs/dict');
 const $ = ext.$;
+
+
+const Dict = require('./libs/dict');
 const storage = ext.storage;
 const known_sources = require('./libs/known-sources-gutenberg');
 const validators = require('./libs/validators');
