@@ -50,16 +50,8 @@ function log(options, text) {
 		console.log(text);
 }
 
-var _global_cache = {};
 function fetchSource(options, cb) {
-	var cache = options.cache || _global_cache;
-	var sourceObj = cache[options.url] || {};
-	if (sourceObj.text) {
-		// already fetched
-		log(options, "Reusing fetched text")
-		cb(sourceObj.text);
-		return; 
-	}
+
 	var url = options.url + '';
 	if (!/^http/.test(url)) // missing http:// or https://   ?
 		url = options.base_url + url;
@@ -71,11 +63,8 @@ function fetchSource(options, cb) {
 			log(options, "Request ok")
 			if (options.ajaxCallback)
 				options.ajaxCallback("end");
-			sourceObj.text = data + '';
-			if (options.cacheCallback)
-				options.cacheCallback(options.url, sourceObj);
 			log(options, 'about to return from ajax')
-			cb(sourceObj.text);
+			cb(data+'');
 		},
 		function fail(xhr) {
 			log(options, "Request fail")

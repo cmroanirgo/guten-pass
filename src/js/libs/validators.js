@@ -28,13 +28,13 @@
 		// text = text.replace(/[\s\S]+?START OF THE PROJECT GUTENBERG.*?\*{3,}/, '');
 
 
-		var reStart = /START OF THE PROJECT GUTENBERG.*?\*{3,}/;
-		var reEnd = /End of the Project Gutenberg EBook/;
+		const reStart = /START OF THE PROJECT GUTENBERG.*?\*{3,}/;
+		const reEnd = /End of the Project Gutenberg EBook/;
 		// START OF THE PROJECT GUTENBERG...
 		var ar = text.split(reStart);
 		text = ar[ar.length-1].replace(reStart, '');
 		// ...END OF THIS PROJECT GUTENBERG
-		var ar = text.split(reEnd);
+		ar = text.split(reEnd);
 		text = ar[0];
 		return multilingualValidator(text);
 	}

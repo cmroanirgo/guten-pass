@@ -51,8 +51,7 @@ var _defaultCreateOptions = {
 	numWords: 4,
 	randomizeNumWords: 1,
 	minWordLen: 5,
-	maxWordLen: 10,
-	randomizer: new Randomizer()
+	maxWordLen: 10
 };
 
 

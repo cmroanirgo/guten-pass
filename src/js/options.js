@@ -11,6 +11,7 @@
 const ext = require("./webext");
 const storage = ext.storage;
 const $ = ext.$;
+const log = ext.registerLogPROD('gp-popup');
 
 
 /*

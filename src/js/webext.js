@@ -41,19 +41,19 @@ function _ExtensionApi () {
 		_this[_api] = null
 
 		try {
-			if (!_this[_api] && chrome[_api]) {
+			if (!_this[_api] && !!chrome[_api]) {
 				_this[_api] = chrome[_api]
 			}
 		} catch (e) {}
 
 		try {
-			if (!_this[_api] && window[_api]) {
+			if (!_this[_api] && !!window[_api]) {
 				_this[_api] = window[_api]
 			}
 		} catch (e) {}
 
 		try {
-			if (!_this[_api] && browser[_api]) {
+			if (!_this[_api] && !!browser[_api]) {
 				_this[_api] = browser[_api]
 			}
 		} catch (e) {}
@@ -66,13 +66,13 @@ function _ExtensionApi () {
 
 	// always prefer browser's runtime AND browserAction
 	try {
-		if (browser && browser.runtime) {
+		if (browser && !!browser.runtime) {
 			_this.runtime = browser.runtime
 		}
 	} catch (e) {}
 
 	try {
-		if (browser && browser.browserAction) {
+		if (browser && !!browser.browserAction) {
 			_this.browserAction = browser.browserAction
 		}
 	} catch (e) {}
@@ -89,6 +89,45 @@ function _Extension() {
 	
 	_this._ = _;
 	_this.$ = $;
+	_this.eatError = function(message) {
+		try {
+			if (_this.runtime.lastError)
+				console.error(message||'runtime.lastError', _this.runtime.lastError.message.toString())
+		}
+		catch(e) {
+
+		}
+	}
+	_this.registerLog = function(name) {
+		var log = function() {
+			var args = Array.prototype.slice.call(arguments);
+			args.unshift(name);
+			console.log.apply(null, args);
+		}
+		log.warn = function() {
+			var args = Array.prototype.slice.call(arguments);
+			args.unshift(name);
+			console.warn.apply(null, args);
+		}
+		log.error = function() {
+			var args = Array.prototype.slice.call(arguments);
+			args.unshift(name);
+			console.error.apply(null, args);
+		}
+
+		return log;
+	}
+	_this.registerLogPROD = function(name) {
+		if (_PRODUCTION) {
+			var log = function() { }
+			log.warn = log;
+			log.error = log;
+			return log;
+		}
+			
+		else
+			return _this.registerLog(name);
+	}
 }
 
 module.exports = new _Extension();
