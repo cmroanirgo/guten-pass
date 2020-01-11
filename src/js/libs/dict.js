@@ -11,7 +11,7 @@
 // This will probably be a more memory hungry solution.
 
 var Randomizer = require('./randomizer');
-
+var defaultValidator = require('./validators').default;
 
 
 
@@ -41,6 +41,7 @@ function extend(origin) { // copied from electron-api-demos/node_modules/glob/gl
 	return origin
 }
 
+
 var _defaultLearnOptions = {
 	minWordLen: 3,
 	maxWordLen: 20,
@@ -55,15 +56,6 @@ var _defaultCreateOptions = {
 };
 
 
-
-function defaultValidator(phrase) {
-	// trim out all invalid chars
-	var phrase = phrase.toLowerCase() // ignore case
-		.replace(/[^a-z]/gi, ' ') // make invalid chars a SPACE
-		.replace(/\b(?:and|an|or|the)\b/gi, ' ')// trim *very* common words
-		.replace(/ {2,}/g, ' ').trim(); // remove excess whitespace
-	return phrase;
-};
 
 
 function RootDict() {
@@ -138,11 +130,6 @@ RootDict.prototype.learn = function(phrase, options) {
 	return phrase;
 };
 
-
-// static
-RootDict.getDefaultValidator = function() {
-	return defaultValidator;
-};
 
 // static
 RootDict.random = function(from, to) { 

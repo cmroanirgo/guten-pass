@@ -16,55 +16,57 @@ const validators = require('./validators');
 
 var known_sources = [
 	/*{
-		name: "Complete Works of Shakespeare",
+		title: "Complete Works of Shakespeare",
 		author: "Shakespeare",
 		url: "cache/epub/100/pg100.txt",
 		validator: validators.play
 	},*/
 	{
-		name: "Macbeth",
-		author: "Shakespeare",
+		title: "Macbeth by Shakespeare",
 		url: "cache/epub/2264/pg2264.txt",
 		validator: function(text) {
-			text = text.replace(/[\s\S]+David Reed/g, ''); // last line before start of play is this
+			text = text.replace(/[\s\S]+David Reed/, ''); // last line before start of play is this
 			return validators.play(text);
 		}
 	},
 	{
-		name: "Legends Of The Gods",
-		author: "E. A. Wallis Budge",
+		title: "Legends Of The Gods by E. A. Wallis Budge",
 		url: "cache/epub/9411/pg9411.txt",
 	},
 	{
-		name: "The Aenid",
-		author: "Virgil",
+		title: "The Aenid by Virgil",
 		url: "cache/epub/227/pg227.txt",
 		language: "latin",
 	},
 	{
-		name: "Bulfinch's Mythology: The Age of Fable",
-		author: "Thomas Bulfinch",
+		title: "Bulfinch's Mythology: The Age of Fable by Thomas Bulfinch",
 		url: "cache/epub/3327/pg3327.txt"
 	},
 	{
-		name: "The Happy Prince and Other Tales",
-		author: "Oscar Wilde",
+		title: "The Happy Prince and Other Tales by Oscar Wilde",
 		url: "cache/epub/30120/pg30120.txt"
 	},
 	{
-		name: "Journal of Entomology and Zoology, Volume 11, Number 4, December 1919",
-		author: "Gunthorp, Alexander and Hilton",
+		title: "Journal of Entomology and Zoology, Volume 11, Number 4, December 1919 by Gunthorp, Alexander and Hilton",
 		url: "cache/epub/37632/pg37632.txt"
 	},
 	{
-		name: "Astounding Stories of Super-Science, January 1930",
-		author: "Various",
+		title: "Astounding Stories of Super-Science, January 1930",
 		url: "cache/epub/41481/pg41481.txt"
 	},
 	{
-		name: "Pride and Prejudice",
-		author: "Jane Austen",
+		title: "Pride and Prejudice by Jane Austen",
 		url: "files/1342/1342-0.txt"
+	},
+	{
+		title: "老子 by Laozi",
+		lang: "Chinese",
+		url: "files/24039/24039-0.txt"
+	},
+	{
+		title: "Αθηναίων Πολιτεία by Aristotle",
+		lang: "Greek",
+		url: "files/39963/39963-0.txt"
 	}
 ];
 

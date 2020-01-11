@@ -26,10 +26,10 @@ $('td[property="dcterms:format"][content*="text/plain"] a[href]').each(function(
 	console.log("Found text file: " + $(el).attr('href'))
 
 	// remove existing buttons
-	$(".wordish-add-text", el).each(function() { this.remove(); })
+	$(".guten-pass-btn", el).each(function() { this.remove(); })
 	// Add button
-	var icon = browser.runtime.getURL("icons/icon-16.png");
-	var newEl = htmlToElement("<a class=\"wordish-add-text\" href=\"#\"><img src=\""+icon+"\"> Add to Wordish</a>")
+	var icon = ext.runtime.getURL("icons/icon-16.png");
+	var newEl = htmlToElement("<a class=\"guten-pass-btn\" href=\"#\"><img src=\""+icon+"\"> Add to Guten Pass</a>")
 	el.parentNode.insertBefore(newEl, el.nextSibling);
 
 
@@ -37,7 +37,7 @@ $('td[property="dcterms:format"][content*="text/plain"] a[href]').each(function(
 		.on('click', function(e) {
 			e.preventDefault();
 			var title = $('.header>h1').text();
-			if (confirm("TODO: Press OK if you would like to add\n\""+title+"\"?\nto Wordish..."))
+			if (confirm("TODO: Press OK if you would like to add\n\""+title+"\"?\nto Gutenberg Password Generator."))
 			{
 				alert("TODO: Not impl yet. Sorry\n(" + el.href+")\n");
 			}

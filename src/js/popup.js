@@ -10,14 +10,16 @@
 */
 
 const ext = require("./webext");
-const Wordish = require('./libs/dict');
+const Dict = require('./libs/dict');
 const $ = ext.$;
 const storage = ext.storage;
-const known_sources = require('./sources/gutenberg');// TODO. If more than 1 source collate
-const validators = require('./sources/validators');
-const fetchSource = require('./libs/fetch.js');
+const known_sources = require('./libs/known-sources-gutenberg');
+const validators = require('./libs/validators');
+const fetchSource = require('./libs/fetch');
 
-function log(str) { console.log(str); }
+var log = console.log;
+if (_PRODUCTION)
+	log = function() {}
 
 var _global_popup_cache = {};
 
@@ -35,18 +37,19 @@ function generate(options, cb) {
 		options = null;
 	}
 	options = options || {randomSource:true};
-	if (!options.url && !options.text && !options.dictionaryCache && !options.randomSource)
+	if (!options.url && !options.text && !options.dictionary && !options.randomSource)
 		throw new Error("Need to specify a url, text, or randomSource=true for password generator");
 
 	var source; // = undefined;
 	if (options.randomSource) {
-		source = known_sources.sources[Wordish.random(0, known_sources.sources.length-1)];
-		log(options, "Randomly chose: '"+source.name+"' by " + source.author + ". url: " + source.url)
+		source = known_sources.sources[Dict.random(0, known_sources.sources.length-1)];
+		log("Randomly chose: \""+source.title+"\". url: " + source.url)
 		options.url = source.url;
 	}
 
-	// TODO. This is needed for chrome. Fails on Firefox
-	options.base_url = "https://cors-anywhere.herokuapp.com/" + encodeURI(known_sources.base_url);
+	// TODO. Proxy is needed for chrome. Fails on Firefox
+	var proxy = null; // "https://cors-anywhere.herokuapp.com/" + 
+	options.base_url = known_sources.base_url; //!proxy ? known_sources.base_url : (proxy + encodeURI(known_sources.base_url));
 	options.cache = _global_popup_cache;
 	options.cacheCallback = function(url, obj) {
 		_global_popup_cache[url] = obj;
@@ -54,7 +57,7 @@ function generate(options, cb) {
 		log("Updated cached documents");
 	}
 
-	var wordish;
+	var dict;
 	if (!options.dictionary || options.dictionaryRelearn) {
 		// most of the time
 
@@ -65,7 +68,7 @@ function generate(options, cb) {
 		}
 		learnOptions.validator = options.validator || known_sources.default_validator;
 
-		wordish = new Wordish(options.accuracy);
+		dict = new Dict(options.accuracy);
 
 		if (!options.text) {
 			fetchSource(options, 
@@ -76,45 +79,44 @@ function generate(options, cb) {
 						return;
 					}
 					log('learning...')
-					wordish.learn(text, learnOptions);	
+					dict.learn(text, learnOptions);	
 					log('generating...')
-					_generate(wordish)	
+					_generate(dict)	
 				}
 			);
 		}
 		else {
-			log(options, "learning text...")
-			wordish.learn(options.text, learnOptions);
-			_generate(wordish)	
+			log("learning...")
+			dict.learn(options.text, learnOptions);
+			_generate(dict)	
 		}
 	}
 	else
 	{
 		// re-use whatever's been learnt
-		log(options, "Reusing dictionary...")
-		wordish = options.dictionary;
-		_generate(wordish)	
+		log("Reusing dictionary...")
+		dict = options.dictionary;
+		_generate(dict)	
 	}
 
 
-	function _generate(wordish) {
-		log(options, "Creating password...")
+	function _generate(dict) {
+		log("Creating password...")
 		var results = [];
 		var num_results = options.num_results || 1;
 		while (results.length<num_results)
 		{
-			var words = wordish.createWords(options);
+			var words = dict.createWords(options);
 			if (!options.keepSeparate || options.separator!==null) 
 				words = words.join(options.separator||'-');
 			results.push(words);
 		}
 
 		cb(results, {
-			dictionary: wordish, 
+			dictionary: dict, 
 			cache: options.cache || _global_popup_cache,
 			source: source
 			})
-		log(options, "")
 	}
 }
 
@@ -165,8 +167,7 @@ var _last_dict = {};
 
 $("#generate").on("click", function(e) {
 	e.preventDefault();
-
-	var source = known_sources.sources[4]; // Happy Prince
+	const t0 = performance.now();
 
 	var options = {
 		num_results: 5,
@@ -179,6 +180,14 @@ $("#generate").on("click", function(e) {
 		separator: '-',
 	};
 
+	var source = null; // known_sources.sources[4]; // Happy Prince
+	if (true) {
+		source = known_sources.sources[Dict.random(0, known_sources.sources.length-1)];
+		log("Randomly chose: \""+source.title+"\". url: " + source.url)
+		options.url = source.url;
+	}
+
+
 	if (source) {
 		options.url = source.url;
 		options.dictionary = _last_dict[source.url];
@@ -186,14 +195,16 @@ $("#generate").on("click", function(e) {
 	else
 		options.randomSource = true;
 
+	function round(val) { return Math.round(val*1000)/1000; }
 
 	generate(options, function(words, meta, err) {
 		if (err) {
-			log('generate error:')
+			log('Failed to generate words:')
 			log(err);
 			return;
 		}
-		log('generate ok:' + words + ', '+meta);
+		var t1 = performance.now();
+		log('generated in '+round(t1-t0)+'ms : ' + words);
 		if (source)
 			meta.source = source;
 
@@ -202,8 +213,7 @@ $("#generate").on("click", function(e) {
 		$('#password-3').val(words[2]);
 		$('#password-4').val(words[3]);
 		$('#password-5').val(words[4]);
-		$('#source>#title').text(meta.source.name);
-		$('#source>#author').text(meta.source.author);
+		$('#source>#title').text(meta.source.title);
 		$('#source>#lang').text(meta.source.language || '');
 		$('#source>#url').text(meta.source.url);
 		_last_dict[meta.source.url] = meta.dictionary;

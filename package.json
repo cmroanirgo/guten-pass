@@ -1,24 +1,23 @@
 {
-  "name": "wordish",
+  "name": "guten-pass-addon",
   "private": true,
   "version": "0.0.1",
-  "description": "wordish password generator",
+  "description": "A password generator (for browsers) using gutenberg texts as source material",
   "scripts": {
     "build": "rm -rf build/* && webpack --display-error-details --optimize-minimize -prod && mkdir -p dist && cp build/*.zip dist/",
     "build:debug": "rm -rf build && webpack --display-error-details",
     "watch": "rm -rf build/* && webpack --devtool source-map --debug --output-pathinfo --progress --colors --watch"
   },
   "repository": {
-    "url": "https://github.com/cmroanirgo/webextension-template.git"
+    "url": "https://github.com/cmroanirgo/guten-pass-addon.git"
   },
   "author": "cmroanirgo",
-  "license": "ISC",
+  "license": "APGL",
   "bugs": {
-    "url": "https://github.com/cmroanirgo/webextensions-template/issues"
+    "url": "https://github.com/cmroanirgo/guten-pass-addon/issues"
   },
-  "homepage": "https://github.com/cmroanirgo/webextension-template#readme",
+  "homepage": "https://github.com/cmroanirgo/guten-pass-addon#readme",
   "dependencies": { 
-  	"wordish":"^1.0.1"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^4.2.3",

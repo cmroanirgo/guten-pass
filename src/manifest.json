@@ -1,8 +1,8 @@
 {
-  "name": "Wordish",
+  "name": "Gutenberg Password Generator",
   "version": "0.0.1",
   "manifest_version": 2,
-  "description": "Wordish is a password generator, using source texts of your choice",
+  "description": "A password generator (for browsers) using gutenberg texts as source material",
   "icons": {
     "16": "icons/icon-16.png",
     "128": "icons/icon-128.png"
@@ -47,7 +47,7 @@
       "19": "icons/icon-19.png",
       "38": "icons/icon-38.png"
     },
-    "default_title": "Generate Words",
+    "default_title": "Generate",
     "default_popup": "popup.html"
   },
   "web_accessible_resources": ["icons/*.png"]
