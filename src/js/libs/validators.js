@@ -9,9 +9,9 @@
 
 (function(){ 
 
-	var log = console.log;
-	if (_PRODUCTION)
-		log = function() {}
+	const log = require('./log').registerLogPROD('validators');
+	//const reCommon = /\b(?:and|an|or|the|.f||a|to|be|not|for|g.t|her|his|him|she)\b/gi; // /\b(?:and|an|or|the)\b/gi
+	const reCommon = /\b(?:\w{1,3})\b/g; // any 1 to 3 word chars is removed
 
 	function trimGutenbergPreamble(text) {
 		// look for the line:
@@ -28,8 +28,8 @@
 		// text = text.replace(/[\s\S]+?START OF THE PROJECT GUTENBERG.*?\*{3,}/, '');
 
 
-		const reStart = /START OF THE PROJECT GUTENBERG.*?\*{3,}/;
-		const reEnd = /End of the Project Gutenberg EBook/;
+		const reStart = /START OF (THE|THIS)? ?PROJECT GUTENBERG.*?\*{3,}/i;
+		const reEnd = /End of (the|this)? ?Project Gutenberg/i;
 		// START OF THE PROJECT GUTENBERG...
 		var ar = text.split(reStart);
 		text = ar[ar.length-1].replace(reStart, '');
@@ -44,7 +44,7 @@
 		log("cleaning up text...")
 		var phrase = phrase.toLowerCase() // ignore case
 			.replace(/[^a-z]/gi, ' ') // make invalid chars a SPACE
-			.replace(/\b(?:and|an|or|the)\b/gi, ' ')// trim *very* common words
+			.replace(reCommon, ' ')// trim *very* common words
 			.replace(/ {2,}/g, ' ').trim(); // remove excess whitespace
 		return phrase;
 	}
@@ -56,7 +56,7 @@
 		var text = text.toLowerCase();
 		text = text
 			.replace(reInvalidChars, ' ') // make invalid chars a SPACE
-			.replace(/\b(?:and|an|or|the)\b/gi, ' ')// trim *very* common words
+			.replace(reCommon, ' ')// trim *very* common words
 			.replace(/ {2,}/g, ' ').trim(); // remove excess whitespace
 		return text;
 	}

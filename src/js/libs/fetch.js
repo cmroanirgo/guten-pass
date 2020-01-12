@@ -54,7 +54,7 @@ function fetchSource(options, cb) {
 
 	var url = options.url + '';
 	if (!/^http/.test(url)) // missing http:// or https://   ?
-		url = options.base_url + url;
+		throw new Error('unknown url type');//url = options.base_url + url;
 	if (options.ajaxCallback)
 		options.ajaxCallback("begin");
 	log(options, "Requesting " + url + "")

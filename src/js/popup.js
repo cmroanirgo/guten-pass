@@ -26,19 +26,24 @@ var _currentOptions = {};
 //
 
 // launch
-$('#ajax').hide().attr('src', ext.runtime.getURL("icons/animate.gif"));
-loadKnownSources();
+$('#ajax').hide(); 
+$('#message').hide(); 
+
+//$('#ajax img')..attr('src', ext.runtime.getURL("icons/animate.gif"));
+loadSources();
 loadOptions();
 setTimeout(generate, 100);
 
 function loadOptions() {
 	ext.storage.get('options', function(resp) {
+		ext.logLastError('loadOptions');
+
 		if (resp.options)
 			_currentOptions = resp.options;
 		onOptionsUpdated();
 	});
 }
-function loadKnownSources() {
+function loadSources() {
 	require('./libs/load-sources')(function(sources) {
 		onSourcesUpdated(sources);
 		onOptionsUpdated();
@@ -67,8 +72,12 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 			$('#popup input').disable(request.status === 'begin'); // or 'end' is th eone other state
 			$('#ajax').show(request.status === 'begin');
 			break;
+		default:
+			return false;
 
 	}
+	if (sendResponse)
+		return sendResponse();
 });
 
 
@@ -141,8 +150,7 @@ function generate() {
 
 		$('#generate').enable();
 		if (!response) {
-			ext.eatError('gp-generate post');
-			DEBUG && log('Failed to generate words:')
+			ext.logLastError('Failed to generate');
 			return;
 		}
 		if (response.error) {
@@ -171,6 +179,23 @@ function generate() {
 	})
 }
 
+var _flash = null;
+function flashMessage(str) {
+	if (!_flash)
+		clearTimeout(_flash);
+	$('#message').text(str).show();
+	_flash = setTimeout(function() {
+		_flash = null;
+		$('#message').text('').hide();
+	}, 2000)
+}
+
+$('button.copy').on("click", function(e) {
+ 	this.previousElementSibling.select(); // Select the adjacent input
+  	document.execCommand('copy');
+  	flashMessage('Copied to clipboard');
+
+});
 $("#generate").on("click", function(e) {
 	e.preventDefault();
 	generate();
@@ -181,10 +206,11 @@ $('#sources').on("change", function(e) {
 		source_url:$(this).val()
 	  }, 
 	  function() {
+	  	ext.logLastError('gp-setSource');
 	  	setTimeout(generate,10); // call generate in a little bit
 	  });
 })
 $("#reset").on("click", function(e) {
 	e.preventDefault();
-	sendMessage({ action: "gp-resetAllData"  });
+	sendMessage({ action: "gp-resetAllData"  }, ext.logLastErrorCB('gp-resetAllData'));
 })

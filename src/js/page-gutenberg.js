@@ -37,9 +37,13 @@ $('td[property="dcterms:format"][content*="text/plain"] a[href]').each(function(
 		.on('click', function(e) {
 			e.preventDefault();
 			var title = $('.header>h1').text();
-			if (confirm("TODO: Press OK if you would like to add\n\""+title+"\"?\nto Gutenberg Password Generator."))
+			if (confirm("Press OK if you would like to add:\n\n\""+title+"\"\n\nto \"Guten Pass\" Password Generator."))
 			{
-				alert("TODO: Not impl yet. Sorry\n(" + el.href+")\n");
+				ext.runtime.sendMessage({
+					action: "gp-addSource",
+					title: title,
+					url: el.href
+				}, ext.logLastErrorCB('gp-addSource'))
 			}
 		});
 });

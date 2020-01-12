@@ -26,7 +26,7 @@ const log = ext.registerLogPROD('gp-background');
 //
 //
 //
-var _knownSources = require('./libs/known-sources-gutenberg');
+var _sources = require('./libs/inbuilt-gutenberg');
 var _currentOptions = {
 	numWords: 4,
 	randomizeNumWords: 1,
@@ -43,10 +43,11 @@ var _learnOptions = { // keep words from 3 to 2 chars long. These signify the MA
 
 // launch
 
-loadKnownSources();
+loadSources();
 loadOptions();
 if (DEBUG) {
 	storage.get(null, function(data) {
+		ext.logLastError('loadAll')
 		log("Local storage is: ", data);
 	});
 
@@ -78,6 +79,10 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     		_currentOptions.source_url = request.source_url;
     		saveOptions();
     		return sendResponse({result:"ok"}); 
+
+    	case 'gp-addSource': // from page-gutenberg.js when user adds a new source book (NB: popup would be closed 99% most likely & doesn't need to be informed)
+    		return addSource(request, sender, sendResponse);
+
     		
 
     	case 'gp-optionsChanged': // this is sent from popup.js & options.js
@@ -87,7 +92,13 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     		onOptionsChanged();
     		break;
 
+		default:
+			return false;
+
+
   	}
+  	if (sendResponse)
+  		return sendResponse();
   	return false;
 });
 
@@ -100,16 +111,25 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 //
 
 
-function loadKnownSources() {
+function loadSources() {
 	require('./libs/load-sources')(function(sources) {
-		_knownSources.sources = sources;
+		_sources = sources;
 		onSourcesChanged();
 	})
+}
+
+function saveSources(sources) {
+	require('./libs/load-sources').saveSources(sources);
+}
+
+function isValidSource(source) {
+	return require('./libs/load-sources').isValidSource(source);
 }
 
 function loadOptions() {
 	// this makes sure that we have saved the list of known sources
 	storage.get('options', function(resp) {
+		ext.logLastError('loadOptions')
 		if (resp.options)
 			_currentOptions = _.extend(_currentOptions, resp.options);
 		onOptionsChanged();
@@ -124,7 +144,7 @@ function loadOptions() {
 }
 
 function saveOptions() {
-	storage.set({options:_currentOptions});
+	storage.set({options:_currentOptions}, 	ext.logLastErrorCB('saveOptions'));
 }
 
 
@@ -155,6 +175,7 @@ function getCachedUrlObj(url, cb) {
 
 	obj = {};
 	storage.get(key, function(resp){
+		ext.logLastError('getCachedUrlObj');
 		if (resp[key])
 			obj.text = resp[key].text;
 		cb(obj);
@@ -167,7 +188,25 @@ function storeCachedUrlObj(url, obj) {
 	var s = {};
 	s[key] = {text:obj.text+''};
 	obj.text =  undefined; // don't need this in memory anymore!
-	storage.set(s)
+	storage.set(s, 	ext.logLastErrorCB('storeCachedUrlObj'))
+}
+
+
+
+
+function addSource(request, sender, responseCB)
+{
+	log('Adding a new source...')
+	var source = {title:request.title, url:request.url};
+	if (!isValidSource(source)) {
+		return responseCB({error:"Invalid Source"});;
+	}
+	_sources.push(source);
+	saveSources(_sources);
+	_currentOptions.source_url = source.url;
+	saveOptions();
+	log('Added a new source...')
+	return responseCB({action: "ok"});
 }
 
 function generatePasswords(request, sender, responseCB) {
@@ -179,7 +218,7 @@ function generatePasswords(request, sender, responseCB) {
 	var source; // = undefined;
 	if (!_.isEmpty(options.source_url)) {
 		// try and find the source url
-		_knownSources.sources.forEach(function(src) {
+		_sources.forEach(function(src) {
 			if (src.url === options.source_url) {
 				source = src;
 				options.url = source.url;
@@ -187,7 +226,7 @@ function generatePasswords(request, sender, responseCB) {
 		})
 	}
 	if (options.randomSource || !source) {
-		source = _knownSources.sources[Dict.random(0, _knownSources.sources.length-1)];
+		source = _sources[Dict.random(0, _sources.length-1)];
 		DEBUG && log("Randomly chose: \""+source.title+"\". url: " + source.url)
 		options.url = source.url;
 	}
@@ -197,11 +236,9 @@ function generatePasswords(request, sender, responseCB) {
 
 	// TODO. Proxy is needed for chrome. Fails on Firefox
 	var proxy = null; // "https://cors-anywhere.herokuapp.com/" + 
-	options.base_url = _knownSources.base_url; //!proxy ? _knownSources.base_url : (proxy + encodeURI(_knownSources.base_url));
 
 	// fetch source from cache/ local storage
 	getCachedUrlObj(options.url, function(sourceObj) {
-
 
 		var dict;
 		if (!sourceObj.dictionary) {
@@ -236,6 +273,13 @@ function generatePasswords(request, sender, responseCB) {
 							responseCB({error: err});
 							return;
 						}
+						// clean up the text
+						if (source.validator)
+							options.validator = source.validator;
+						var validator = options.validator || _learnOptions.validator;
+						if (validator)
+							text = validator(text);
+
 						sourceObj.text = text;
 						storeCachedUrlObj(options.url, sourceObj)
 

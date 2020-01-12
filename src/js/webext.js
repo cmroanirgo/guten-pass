@@ -86,48 +86,26 @@ function _Extension() {
 
 	const _ = require('./libs/notunderscore');
 	const $ = require('./libs/notjquery');
+	const logs = require('./libs/log');
 	
 	_this._ = _;
 	_this.$ = $;
-	_this.eatError = function(message) {
+	_this.logLastError = function(message) {
 		try {
 			if (_this.runtime.lastError)
-				console.error(message||'runtime.lastError', _this.runtime.lastError.message.toString())
+				console.error(message||'runtime.lastError', _this.runtime.lastError.message.toString(), _this.runtime.lastError)
 		}
 		catch(e) {
 
 		}
 	}
-	_this.registerLog = function(name) {
-		var log = function() {
-			var args = Array.prototype.slice.call(arguments);
-			args.unshift(name);
-			console.log.apply(null, args);
+	_this.logLastErrorCB = function(message) {
+		return function() {
+			_this.logLastError(message);
 		}
-		log.warn = function() {
-			var args = Array.prototype.slice.call(arguments);
-			args.unshift(name);
-			console.warn.apply(null, args);
-		}
-		log.error = function() {
-			var args = Array.prototype.slice.call(arguments);
-			args.unshift(name);
-			console.error.apply(null, args);
-		}
-
-		return log;
 	}
-	_this.registerLogPROD = function(name) {
-		if (_PRODUCTION) {
-			var log = function() { }
-			log.warn = log;
-			log.error = log;
-			return log;
-		}
-			
-		else
-			return _this.registerLog(name);
-	}
+	_this.registerLog = logs.registerLog;
+	_this.registerLogPROD = logs.registerLogPROD;
 }
 
 module.exports = new _Extension();

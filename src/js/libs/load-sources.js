@@ -5,28 +5,22 @@ const DEBUG = true && !_PRODUCTION;
 const log = ext.registerLogPROD('gp-load-sources');
 
 
-module.exports = function(cb) {
+function load(cb) {
 	// this makes sure that we have saved the list of known sources
-	storage.get('sources', function(resp) {
-		var sources = resp.sources;
+	return storage.get('sources', function(resp) {
+		ext.logLastError('load-sources')
+		var sources = !resp ? null: resp.sources;
 
 		// Validate sources, make sure they're all part of gutenberg.org
 		if (sources && _.isArray(sources)) {
-			sources = sources.filter(function(src) {
-				if (!src.url) 
-					return false; // no url
-				if (!src.url.match(/^https?:\/\/(www\.)?gutenberg.org\//)) 
-					return false; // make sure its gutenberg.org!
-				return true;
-			})
+			sources = sources.filter(load.isValidSource)
 		}
 
 		if (!sources || !sources.length) {
 			// save the list of known sources
 			DEBUG && log("No known sources on disk. Storing defaults");
-			var known = require('./known-sources-gutenberg');
-			sources = known.sources;
-			storage.set({'sources': sources});
+			sources = require('./inbuilt-gutenberg');
+			load.saveSources(sources);
 		}
 		else
 		{
@@ -37,3 +31,16 @@ module.exports = function(cb) {
 	});
 };
 
+load.isValidSource = function(src) {
+	if (!src.url) 
+		return false; // no url
+	if (!src.url.match(/^https?:\/\/(www\.)?gutenberg.org\//)) 
+		return false; // make sure its gutenberg.org!
+	return true;
+}
+
+load.saveSources = function(sources) {
+	storage.set({'sources': sources}, ext.logLastErrorCB('load-sources:save'));
+}
+
+module.exports = load;
