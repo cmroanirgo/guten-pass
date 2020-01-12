@@ -47,7 +47,7 @@ var known_sources = [
 		url: "https://gutenberg.org/cache/epub/30120/pg30120.txt"
 	},
 	{
-		title: "Journal of Entomology and Zoology, Volume 11, Number 4, December 1919 by Gunthorp, Alexander and Hilton",
+		title: "Journal of Entomology and Zoology, Vol 11, #4 by Gunthorp, Alexander and Hilton",
 		url: "https://gutenberg.org/cache/epub/37632/pg37632.txt"
 	},
 	{

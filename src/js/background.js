@@ -31,7 +31,8 @@ var _currentOptions = {
 	numWords: 4,
 	randomizeNumWords: 1,
 	minWordLen: 5,
-	maxWordLen: 10
+	maxWordLen: 10,
+	source_url: '', // the currently selected source
 };
 var _learnOptions = { // keep words from 3 to 2 chars long. These signify the MAXiMUM values
 	minWordLen: 3,
@@ -63,7 +64,7 @@ if (DEBUG) {
 // Listen to broadcast messages
 ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	switch (request.action) {
-		case 'gp-resetdata-debug':
+		case 'gp-resetAllData':
 			log("resetting all data...")
 			storage.clear();
 			_global_cache = {};
@@ -73,16 +74,17 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 			generatePasswords(request, sender, sendResponse);
     		return true; // Inform Chrome that we will make a delayed sendResponse
 
+    	case 'gp-setSource': // from popup.js. it expects a callback (so that it can generate a)
+    		_currentOptions.source_url = request.source_url;
+    		saveOptions();
+    		return sendResponse({result:"ok"}); 
+    		
+
     	case 'gp-optionsChanged': // this is sent from popup.js & options.js
     		DEBUG && log("Options changed")
     		_currentOptions = request.options; 
+    		saveOptions();
     		onOptionsChanged();
-    		break;
-
-    	case 'gp-sourcesChanged': // this is sent from popup.js & options.js
-    		DEBUG && log("Known sources changed")
-    		_knownSources = request.sources; 
-    		onSourcesChanged();
     		break;
 
   	}
@@ -99,49 +101,30 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 
 function loadKnownSources() {
-	// this makes sure that we have saved the list of known sources
-	storage.get('sources', function(resp) {
-		var sources = resp.sources;
-
-		// Validate sources, make sure they're all part of gutenberg.org
-		if (sources && _.isArray(sources)) {
-			sources = sources.filter(function(src) {
-				if (!src.url) 
-					return false; // no url
-				if (!src.url.match(/^https?:\/\/(www\.)?gutenberg.org\//)) 
-					return false; // make sure its gutenberg.org!
-				return true;
-			})
-		}
-
-		if (!sources || !sources.length) {
-			// save the list of known sources
-			DEBUG && log("No known sources on disk. Storing defaults");
-			_knownSources = require('./libs/known-sources-gutenberg');
-			storage.set({'sources': _knownSources.sources});
-		}
-		else
-		{
-			// change the list of known sources
-			DEBUG && log("Loaded known sources");
-			_knownSources.sources = sources;
-			onSourcesChanged();
-		}
-	});
+	require('./libs/load-sources')(function(sources) {
+		_knownSources.sources = sources;
+		onSourcesChanged();
+	})
 }
 
 function loadOptions() {
 	// this makes sure that we have saved the list of known sources
 	storage.get('options', function(resp) {
-		if (resp.option)
-			_currentOptions = resp.options;
+		if (resp.options)
+			_currentOptions = _.extend(_currentOptions, resp.options);
 		onOptionsChanged();
 	});
+	/*
+	consider _learnOptions as fixed for the moment
 	storage.get('learnOptions', function(resp) {
 		if (resp.learnOptions)
 			_learnOptions = resp.learnOptions;
 		onOptionsChanged();
-	});
+	});*/
+}
+
+function saveOptions() {
+	storage.set({options:_currentOptions});
 }
 
 
@@ -162,7 +145,8 @@ function onSourcesChanged() {
 var _global_cache = {};
 
 function getCachedUrlObj(url, cb) {
-	var obj = _global_cache["url:"+url];
+	const key = "url:"+url;
+	var obj = _global_cache[key];
 	if (obj && obj.dictionary) {
 		cb(obj);
 		return;
@@ -170,17 +154,18 @@ function getCachedUrlObj(url, cb) {
 		
 
 	obj = {};
-	storage.get("url:"+url, function(resp){
-		if (resp)
-			obj.text = resp.text;
+	storage.get(key, function(resp){
+		if (resp[key])
+			obj.text = resp[key].text;
 		cb(obj);
 	})
 }
 function storeCachedUrlObj(url, obj) {
 	DEBUG && log("Storing cached url: " + url);
-	_global_cache["url:"+url] = obj;
+	const key = "url:"+url;
+	_global_cache[key] = obj;
 	var s = {};
-	s["url:"+url] = {text:obj.text+''};
+	s[key] = {text:obj.text+''};
 	obj.text =  undefined; // don't need this in memory anymore!
 	storage.set(s)
 }
@@ -192,10 +177,22 @@ function generatePasswords(request, sender, responseCB) {
 	//	throw new Error("Need to specify a url, text, or randomSource=true for password generator");
 
 	var source; // = undefined;
+	if (!_.isEmpty(options.source_url)) {
+		// try and find the source url
+		_knownSources.sources.forEach(function(src) {
+			if (src.url === options.source_url) {
+				source = src;
+				options.url = source.url;
+			}
+		})
+	}
 	if (options.randomSource || !source) {
 		source = _knownSources.sources[Dict.random(0, _knownSources.sources.length-1)];
 		DEBUG && log("Randomly chose: \""+source.title+"\". url: " + source.url)
 		options.url = source.url;
+	}
+	if (source) {
+		DEBUG && log("source is \""+source.title+"\"")
 	}
 
 	// TODO. Proxy is needed for chrome. Fails on Firefox

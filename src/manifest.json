@@ -45,5 +45,5 @@
     "default_title": "Guten Pass",
     "default_popup": "popup.html"
   },
-  "web_accessible_resources": ["icons/*.png"]
+  "web_accessible_resources": ["icons/*"]
 }

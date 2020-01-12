@@ -26,15 +26,24 @@ var _currentOptions = {};
 //
 
 // launch
+$('#ajax').hide().attr('src', ext.runtime.getURL("icons/animate.gif"));
+loadKnownSources();
 loadOptions();
+setTimeout(generate, 100);
 
 function loadOptions() {
 	ext.storage.get('options', function(resp) {
-		_currentOptions = resp.options;
+		if (resp.options)
+			_currentOptions = resp.options;
 		onOptionsUpdated();
 	});
 }
-
+function loadKnownSources() {
+	require('./libs/load-sources')(function(sources) {
+		onSourcesUpdated(sources);
+		onOptionsUpdated();
+	})
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -56,6 +65,7 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 		case 'gp-ajax':
 			log('gp-ajax status:', request.status);
 			$('#popup input').disable(request.status === 'begin'); // or 'end' is th eone other state
+			$('#ajax').show(request.status === 'begin');
 			break;
 
 	}
@@ -63,16 +73,67 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 
 function onOptionsUpdated() {
-	// todo
+
+	var val = $($('#sources').children().get(0)).val(); // == "random"
+	if (!_.isEmpty(_currentOptions.source_url))
+		val = _currentOptions.source_url;
+	$('#sources').val(val);
 }
+
+function onSourcesUpdated(sources) {
+	var selected = $('#sources').val();
+	$('#sources>options').each(function(idx) { if (idx>0) this.remove(); }) // remove all existing options
+	var html = '';
+	sources.forEach(function(source) {
+		html += "<option value=\""+source.url+"\">"+_.htmlEncode(source.title)+"</option>\n"
+	})
+	$('#sources').lastChild().appendHtml(html);
+	$('#sources').val(selected);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+//
+// utils
+//
+$.register({
+	lastChild: function() {
+		return $(this.get(0).lastElementChild); // or $(this.children().get(-1)) . should be equivalent~ish
+	},
+	appendHtml: function(html) { // appends Sibling
+		this.each(function(i, el) { 
+			var newEl = htmlToElements(html);
+			el.parentNode.insertBefore(newEl, el.nextSibling);
+		});
+		return this;
+	},
+
+});
+
+function round(val) { return Math.round(val*1000)/1000; } 
+
+function htmlEncode(text) {
+	return text.replace(/\&(?!amp\;)/gi, '&amp;').
+		replace(/\</gi, '&lt;')
+}
+
+/*function htmlToElement(html) {
+    var template = document.createElement('template');
+    html = html.trim(); // Never return a text node of whitespace as the result
+    template.innerHTML = html;
+    return template.content.firstChild;
+}*/
+function htmlToElements(html) {
+    var template = document.createElement('template');
+    html = html.trim(); // Never return a text node of whitespace as the result
+    template.innerHTML = html;
+    return template.content;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
 //
 //
-
-function round(val) { return Math.round(val*1000)/1000; } 
-
 function generate() {
 	const t0 = performance.now();
 	$('#generate').disable();
@@ -114,7 +175,16 @@ $("#generate").on("click", function(e) {
 	e.preventDefault();
 	generate();
 })
+$('#sources').on("change", function(e) {
+	e.preventDefault();
+	sendMessage({ action: "gp-setSource",
+		source_url:$(this).val()
+	  }, 
+	  function() {
+	  	setTimeout(generate,10); // call generate in a little bit
+	  });
+})
 $("#reset").on("click", function(e) {
 	e.preventDefault();
-	sendMessage({ action: "gp-resetdata-debug"  });
+	sendMessage({ action: "gp-resetAllData"  });
 })
