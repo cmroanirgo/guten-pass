@@ -18,7 +18,7 @@ const log = ext.registerLogPROD('gp-popup');
  TODO:
 
  - show a checked list of already downloaded files
-*/
+* /
 
 
 var colorSelectors = $(".js-radio");
@@ -45,4 +45,4 @@ colorSelectors.on("click", function(e) {
     storage.set({ color: value }, function() {
       setColor(value);
     });
-});
+});*/

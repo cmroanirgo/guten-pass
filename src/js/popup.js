@@ -28,6 +28,8 @@ var _currentOptions = {};
 // launch
 $('#ajax').hide(); 
 $('#message').hide(); 
+if (_PRODUCTION)
+	$('#reset').get(0).remove();
 
 //$('#ajax img')..attr('src', ext.runtime.getURL("icons/animate.gif"));
 loadSources();

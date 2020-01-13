@@ -1,7 +1,7 @@
 {
   "name": "guten-pass-addon",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Guten Pass is a password generator (for browsers) using gutenberg texts as source material",
   "scripts": {
   	"zipsource":   "rm -f dist/guten-pass-addon-src-${VER:-9.9.9}.zip && zip -r -x@.srcignore dist/guten-pass-addon-src-${VER:-9.9.9}.zip . && ls -al dist/guten-pass-addon-src-${VER:-9.9.9}.zip",

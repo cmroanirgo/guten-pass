@@ -101,13 +101,14 @@
 			this.each(function(i, el) { el.textContent = value;}); 
 			return this; 
 		},
-		html: function /*html*/(value) { 
+		/*
+		html: function (value) { 
 			if ( value === undefined) {
 				return !this.elems.length ? undefined : this.elems[0].innerHTML;
 			}
 			this.each(function(i, el) { el.innerHTML = value;}); 
 			return this; 
-		},
+		},*/
 		val: function /*val*/(value) { 
 			if ( value === undefined) {
 				return !this.elems.length ? undefined : this.elems[0].value;
@@ -121,7 +122,7 @@
 			return this; 
 		},
 		enable : function() { 	return this.disable(false); },
-		replaceWith: function /*replaceWith*/(value) {this.each(function(i, el) { el.outerHTML = value;});  return this;  },
+		// replaceWith: function (value) {this.each(function(i, el) { el.outerHTML = value;});  return this;  },
 		attr: function /*attr*/(atr,value) {
 			if ( value === undefined) {
 				return !this.elems.length ? undefined : this.elems[0].getAttribute(atr);
