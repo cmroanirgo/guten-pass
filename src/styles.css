@@ -5,7 +5,8 @@ html.popup body>div { padding: 10px; padding: 10px;}
 html.popup footer { border-top: 1px solid #e0e0e0; padding: 10px;background-color:white; position: relative;}
 html.popup input { width: 290px; }
 html.popup label { min-width: 30%; }
-html.popup button.copy { cursor: pointer; font-size:0.8em; height:18px; width:35px;}
+html.popup button.copy { cursor: pointer; font-size:0.8em; height:18px; width:40px; padding: 0; margin: auto;}
+html.popup button#generate { cursor: pointer; margin-top:5px;font-size:1.2em;}
 html.popup select { width: 280px; }
 html.popup #source { margin-top:0.8em; font-size: 0.75em;}
 html.popup #options { margin-top:0.8em; font-size: 0.75em;}
@@ -13,4 +14,4 @@ html.popup label { display: block; }
 html.popup #ajax { position: absolute; top:0; left:0; width:100%; height: 100%; background:white; opacity: 0.8; text-align: center;}
 html.popup #ajax>* { display: block; }
 html.popup #ajax>img { padding-left:50%; margin-left: -32px}
-html.popup #message { position: absolute; top:0; left:0; width:100%; height: 100%; background:#ffa0a0; font-size:1.5em; text-align: center; padding:10px 5px;}
+html.popup #message { position: absolute; top:0; left:0; width:100%; height: 100%; background:#a0f0ff; font-size:1.5em; text-align: center; padding:10px 5px;}

@@ -213,4 +213,5 @@ $('#sources').on("change", function(e) {
 $("#reset").on("click", function(e) {
 	e.preventDefault();
 	sendMessage({ action: "gp-resetAllData"  }, ext.logLastErrorCB('gp-resetAllData'));
+	flashMessage("Resetting all data...")
 })
