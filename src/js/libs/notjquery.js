@@ -11,11 +11,11 @@
 
 	"use strict";
 
-	var jqF = function(selector) { // this is the same as $()
-		return new glob.init(selector);
+	var jqF = function(selector, docObj) { // this is the same as $()
+		return new glob.init(selector, docObj);
 	}
 
-	var jq = function(selector) { 
+	var jq = function(selector, docObj) { 
 		if (!selector)
 			this.elems = [];
 		else if (__.isFunction(selector)) {
@@ -26,8 +26,10 @@
 			this.elems = [selector];
 		else if (__.isArray(selector))
 			this.elems = selector;
+		else if (__.isArrayish(selector) && !__.isString(selector))
+			this.elems = __.toRealArray(selector)
 		else
-			this.elems = document.querySelectorAll(selector); 
+			this.elems = (docObj || document).querySelectorAll(selector); 
 		return this; 
 	}
 	var log = function(s) { console.log(s); }

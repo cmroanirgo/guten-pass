@@ -16,10 +16,14 @@ var n_ = {
 , isArray: Array.isArray || function(obj) {
     return toString.call(obj) === '[object Array]';
 }
+, isArrayish: function(obj) {
+	return n_.isArray(obj) || (!!obj && obj.length !== undefined)
+}
 , isEmpty: function(x) { return n_.isString(x) && !x.length; }
 , forEach: function(obj, cb) {
 	return Array.prototype.forEach.call(obj, cb);
 }
+
 
 , toRealArray: function (arrayIsh) {
 		if (n_.isArray(arrayIsh)) return arrayIsh;

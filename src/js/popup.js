@@ -98,8 +98,7 @@ function onSourcesUpdated(sources) {
 	sources.forEach(function(source) {
 		html += "<option value=\""+source.url+"\">"+_.htmlEncode(source.title)+"</option>\n"
 	})
-	$('#sources').lastChild().appendHtml(html);
-	$('#sources').val(selected);
+	$('#sources').appendHtml(html).val(selected);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -107,17 +106,16 @@ function onSourcesUpdated(sources) {
 // utils
 //
 $.register({
-	lastChild: function() {
-		return $(this.get(0).lastElementChild); // or $(this.children().get(-1)) . should be equivalent~ish
-	},
-	appendHtml: function(html) { // appends Sibling
+	appendHtml: function(html) { // appends child
 		this.each(function(i, el) { 
-			var newEl = htmlToElements(html);
-			el.parentNode.insertBefore(newEl, el.nextSibling);
+			var newEls = htmlToElements(html);
+			$(newEls).each(function(i2, newEl) {
+				el.appendChild(newEl);	
+			})
+			
 		});
 		return this;
-	},
-
+	}
 });
 
 function round(val) { return Math.round(val*1000)/1000; } 
@@ -133,11 +131,12 @@ function htmlEncode(text) {
     template.innerHTML = html;
     return template.content.firstChild;
 }*/
-function htmlToElements(html) {
-    var template = document.createElement('template');
-    html = html.trim(); // Never return a text node of whitespace as the result
-    template.innerHTML = html;
-    return template.content;
+function htmlToElements(html, rootSelector) {
+	rootSelector = rootSelector || 'body>*:not(script)';
+	const parser = new DOMParser();
+	const newNode = parser.parseFromString(html, 'text/html');
+	var els = newNode.querySelectorAll(rootSelector);
+	return els;
 }
 
 

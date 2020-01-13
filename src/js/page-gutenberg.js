@@ -14,11 +14,12 @@
 const ext = require("./webext");
 const $ = ext.$;
 
-function htmlToElement(html) {
-    var template = document.createElement('template');
-    html = html.trim(); // Never return a text node of whitespace as the result
-    template.innerHTML = html;
-    return template.content.firstChild;
+function htmlToElement(html, rootSelector) {
+	rootSelector = rootSelector || 'body>*:not(script)';
+	const parser = new DOMParser();
+	const newNode = parser.parseFromString(html, 'text/html');
+	const el = newNode.querySelector(rootSelector);
+	return el;
 }
 
 
