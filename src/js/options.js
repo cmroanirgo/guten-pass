@@ -31,7 +31,7 @@ storage.get('color', function(resp) {
   var color = resp.color;
   var option;
   if(color) {
-    option = $(`.js-radio.${color}`);
+    option = $('.js-radio.${color}');
     setColor(color);
   } else {
     option = colorSelectors;

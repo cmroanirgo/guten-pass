@@ -5,7 +5,7 @@ const Archiver = require('webpack-archive-plugin');
 const webpack = require('webpack');
 const path = require('path');
 
-const IS_PRODUCTION = process.argv.indexOf('-prod') !== -1;
+const IS_PRODUCTION = process.argv.indexOf('-p') !== -1;
 const VERSION = require('./src/manifest.json').version;
 
 console.log("\n\n===========================");

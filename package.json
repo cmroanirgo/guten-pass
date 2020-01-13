@@ -4,9 +4,10 @@
   "version": "0.0.1",
   "description": "Guten Pass is a password generator (for browsers) using gutenberg texts as source material",
   "scripts": {
-    "build": "rm -rf build/* && webpack --display-error-details --optimize-minimize -prod && mkdir -p dist && cp build/*.zip dist/",
+  	"zipsource":   "rm -f dist/guten-pass-addon-src-${VER:-9.9.9}.zip && zip -r -x@.srcignore dist/guten-pass-addon-src-${VER:-9.9.9}.zip . && ls -al dist/guten-pass-addon-src-${VER:-9.9.9}.zip",
+    "build":       "rm -rf build/* && webpack --display-error-details -p && mkdir -p dist && cp build/*.zip dist/",
     "build:debug": "rm -rf build && webpack --display-error-details",
-    "watch": "rm -rf build/* && webpack --devtool source-map --debug --output-pathinfo --progress --colors --watch"
+    "watch":       "rm -rf build/* && webpack --devtool source-map --debug --output-pathinfo --progress --colors --watch"
   },
   "repository": {
     "url": "https://github.com/cmroanirgo/guten-pass-addon.git"
