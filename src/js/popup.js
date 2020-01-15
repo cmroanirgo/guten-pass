@@ -233,6 +233,7 @@ $('#sources').on("change", function(e) {
 	  	setTimeout(generate,10); // call generate in a little bit
 	  });
 })
+/*
 $("#delete").on("click", function(e) {
 	var url = $('#source>#title').attr('data-url');
 	$(this).disable();
@@ -245,6 +246,7 @@ $("#delete").on("click", function(e) {
 		loadSources();
 	});
 })
+*/
 $("#reset").on("click", function(e) {
 	e.preventDefault();
 	sendMessage({ action: "gp-resetAllData"  }, function() { 
