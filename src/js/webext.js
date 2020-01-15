@@ -3,7 +3,7 @@
  * license AGPL
  * Copyright (c) 2017 Craig Monro (cmroanirgo), kodespace.com. All rights reserved.
  **/
-
+'use strict';
 /* 
 * Parts of this code originally from https://github.com/EmailThis/extension-boilerplate. Copyright (c) 2017 Bharani / Email This
 * ...but modified and redistributed under MIT license

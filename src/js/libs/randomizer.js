@@ -3,7 +3,7 @@
  * license AGPL
  * Copyright (c) 2017-2019 Craig Monro (cmroanirgo), kodespace.com. All rights reserved.
  **/
-
+'use strict';
  // a good random generator (ses-a-me)
 
 var _hasWindow = typeof window !== 'undefined';

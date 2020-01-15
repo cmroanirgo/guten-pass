@@ -10,7 +10,7 @@
  * Keep this as lightweight and unobtrusive as possible
  */
 (function() {
-
+'use strict';
 const ext = require("./webext");
 const $ = ext.$;
 
@@ -23,12 +23,13 @@ function htmlToElement(html, rootSelector) {
 }
 
 
+// remove existing buttons
+$("a.guten-pass-btn").each(function() { this.remove(); })
+// look for text ebook link
 $('td[property="dcterms:format"][content*="text/plain"] a[href]').each(function(idx, el) {
 	console.log("Found text file: " + $(el).attr('href'))
 
-	// remove existing buttons
-	$(".guten-pass-btn", el).each(function() { this.remove(); })
-	// Add button
+	// Add button	
 	var icon = ext.runtime.getURL("icons/icon-16.png");
 	var newEl = htmlToElement("<a class=\"guten-pass-btn\" href=\"#\"><img src=\""+icon+"\"> Add to Guten Pass</a>")
 	el.parentNode.insertBefore(newEl, el.nextSibling);
@@ -44,7 +45,12 @@ $('td[property="dcterms:format"][content*="text/plain"] a[href]').each(function(
 					action: "gp-addSource",
 					title: title,
 					url: el.href
-				}, ext.logLastErrorCB('gp-addSource'))
+				}, function(resp) {
+					ext.logLastError("gp-addSource")
+					if (resp && resp.error) {
+						alert("Failed to add source:\n\n"+resp.error);
+					}
+				})
 			}
 		});
 });

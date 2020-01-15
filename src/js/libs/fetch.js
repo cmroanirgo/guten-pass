@@ -3,7 +3,7 @@
  * license AGPL
  * Copyright (c) 2017 Craig Monro (cmroanirgo), kodespace.com. All rights reserved.
  **/
-
+'use strict';
 
 // A simple module to fetch data from an online resource
 

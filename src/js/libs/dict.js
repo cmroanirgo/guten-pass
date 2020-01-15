@@ -3,6 +3,7 @@
  * license AGPL
  * Copyright (c) 2017 Craig Monro (cmroanirgo), kodespace.com. All rights reserved.
  **/
+'use strict';
 
 // This basically replaces Wordish altogether
 // Why? Wordish builds trees based on letter usage, up to certain depths. This is a simple dictionary... a list of words with no regard to usage counts

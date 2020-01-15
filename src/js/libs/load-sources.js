@@ -1,3 +1,5 @@
+'use strict';
+
 const ext = require("../webext");
 const storage = ext.storage;
 const _ = ext._;

@@ -1,12 +1,48 @@
 <!doctype html>
-<html>
+<html class="options">
 <head>
   <meta charset="utf-8">
   <link href="styles.css" rel="stylesheet">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Options & Settings</title>
+  <title>Options &amp; Settings</title>
 </head>
-<body id="options">
+<body>
+ <section id="options">
+
+	<label for="num-words">Number of Words</label>
+	<input type="range" id="num-words" min="2" max="20" value="4"/><span class="range-value">4</span><br>
+	<label for="rand-words">Add Random Number of Words</label>
+	<input type="range" id="rand-words" min="0" max="10" value="1"/><span class="range-value">1</span><br>
+	<label for="min-len">Minimum Word Length</label>
+	<input type="range" id="min-len" min="4" max="19" value="5"/><span class="range-value">5</span><br>
+	<label for="max-len">Maximum Word Length</label>
+	<input type="range" id="max-len" min="5" max="20" value="10"/><span class="range-value">10</span><br>
+	<label for="separator">Separator</label>
+	<select id="separator" value=" ">
+		<option value="">(None)</option>
+		<option value=" ">(Space)</option>
+		<option value="-">-</option>
+		<option value=".">.</option>
+		<option value="/">/</option>
+		<option value="|">|</option>
+		<option value="\\">\</option>
+		<option value="_">_</option>
+		<option value="+">+</option>
+		<option value="=">=</option>
+	</select><br>
+
+	<button id="generate">Generate</button><br/>
+	<input id="result" readonly="readonly" type="text" />
+		
+</section>
+<section id="sources">
+</section>
+
+<section id="misc">
+	<div>Note: <span id="total-bytes">0 bytes</span> of storage is currently being used by this plugin</div>
+	<div><button id="reset-all">Reset All Data</button></div>
+</section>
+
 <!--
   <section>
       <h3>Popup color</h3>
@@ -17,7 +53,7 @@
       </div>
       <em>...display your extensions' options here...</em>
   </section>
-  <script src="js/options.js"></script>
 -->
+  <script src="js/options.js"></script>
 </body>
 </html>

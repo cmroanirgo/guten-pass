@@ -7,6 +7,7 @@
 /*
 * This is the main code guten pass.
 */
+'use strict';
 
 const ext = require("./webext");
 const storage = ext.storage;
@@ -69,6 +70,8 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 			log("resetting all data...")
 			storage.clear();
 			_global_cache = {};
+			loadSources();
+			loadOptions();
 			break;
 
 		case 'gp-generate': // this is sent from popup.js
@@ -82,6 +85,9 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     	case 'gp-addSource': // from page-gutenberg.js when user adds a new source book (NB: popup would be closed 99% most likely & doesn't need to be informed)
     		return addSource(request, sender, sendResponse);
+
+    	case 'gp-deleteSource': // from popup.js or options.js
+    		return deleteSource(request, sender, sendResponse);
 
     		
 
@@ -193,15 +199,33 @@ function storeCachedUrlObj(url, obj) {
 
 
 
+const pls_contact = "\n\nIf this problem persists & you feel it to be a problem with Guten Pass, please contact the developer."
+
+
+function getDomainPath(url) { 
+	// given https://www.somesite.com/some/path 
+	// return somesite.com/some/path
+	return url.replace(/https?:\/\/(www\.)?/, ''); 
+} 
 
 function addSource(request, sender, responseCB)
 {
+
 	log('Adding a new source...')
 	var source = {title:request.title, url:request.url};
 	if (!isValidSource(source)) {
-		return responseCB({error:"Invalid Source"});;
+		return responseCB({error:"Invalid Source."+pls_contact});;
 	}
-	_sources.push(source);
+	// look for the source already in the list
+	var existing = _sources.filter(function(src) {
+		return (getDomainPath(src.url) === getDomainPath(source.url));
+	});
+	if (existing && existing.length>0)
+	{
+		return responseCB({error:"Source already exists!"+pls_contact});;
+	}
+	else
+		_sources.push(source);
 	saveSources(_sources);
 	_currentOptions.source_url = source.url;
 	saveOptions();
@@ -209,8 +233,31 @@ function addSource(request, sender, responseCB)
 	return responseCB({action: "ok"});
 }
 
+function deleteSource(request, sender, responseCB)
+{
+
+	var source = {url:request.url};
+	log('Deleting source...: ' + source.url)
+	// look for the source already in the list
+	var newSources = _sources.filter(function(src) {
+		return (getDomainPath(src.url) !== getDomainPath(source.url));
+	});
+	if (!newSources || newSources.length<1)
+	{
+		return responseCB({error:"Can't delete the last source. Add a new one from gutenberg.org first & then retry."+pls_contact});;
+	}
+	else
+		_sources = newSources;
+	if (getDomainPath(_currentOptions.source_url) === getDomainPath(source.url))
+		_currentOptions.source_url = ''; // revert to random
+	saveSources(_sources);
+	saveOptions();
+	log('Removed source ok')
+	return responseCB({action: "ok"});
+}
+
 function generatePasswords(request, sender, responseCB) {
-	var options = _.extend({}, _currentOptions);
+	var options = _.extend({}, _currentOptions, request.options||{});
 
 	//if (!options.url && !options.text && !options.dictionary && !options.randomSource)
 	//	throw new Error("Need to specify a url, text, or randomSource=true for password generator");
@@ -306,12 +353,12 @@ function generatePasswords(request, sender, responseCB) {
 			sourceObj.text = undefined; // no need to keep this in memory. we have the dictionary!
 			DEBUG && log("Creating password...")
 			var results = [];
-			var num_results = options.num_results || 5;
+			var num_results = request.num_results || 5;
 			while (results.length<num_results)
 			{
 				var words = dict.createWords(options);
-				if (!options.keepSeparate || options.separator!==null) 
-					words = words.join(options.separator||'-');
+				var sep = _.isString(options.separator) ? options.separator : ' ';
+				words = words.join(sep);
 				results.push(words);
 			}
 

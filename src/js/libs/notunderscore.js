@@ -5,6 +5,7 @@
  * v1.5
  **/
 // a lighter use for underscore. ie just helper functions, really
+'use strict';
 
 var n_ = {
   isString: function (x) { return typeof x == 'string'; }
@@ -17,7 +18,7 @@ var n_ = {
     return toString.call(obj) === '[object Array]';
 }
 , isArrayish: function(obj) {
-	return n_.isArray(obj) || (!!obj && obj.length !== undefined)
+	return n_.isArray(obj) || (!!obj && !n_.isString(obj) && obj.length !== undefined)
 }
 , isEmpty: function(x) { return n_.isString(x) && !x.length; }
 , forEach: function(obj, cb) {

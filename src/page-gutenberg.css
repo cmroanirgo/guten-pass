@@ -8,7 +8,8 @@ td[property="dcterms:format"][content*="text/plain"] a[href] {
 	font-size: 1.05em;
 	font-weight:bold;
 	padding:10px;
-	background-color:#8080a0;
+	background-color:#a7a7cc;
+	color:#111;
 	border-radius: 5px;
 	box-shadow: 3px 3px 5px rgba(0,0,0,0.4);
 }
@@ -17,6 +18,6 @@ td[property="dcterms:format"][content*="text/plain"] a[href] {
 	vertical-align: bottom;
 }
 .guten-pass-btn:hover {
-	background-color:#a0a0e0;
+	background-color:#ccccf2;
 	box-shadow: none;
 };

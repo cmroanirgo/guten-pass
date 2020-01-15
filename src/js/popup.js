@@ -8,6 +8,7 @@
 * This file is used by popup.html
 * popup.html is shown when the user clicks on the browser button in the toolbar
 */
+'use strict';
 
 const ext = require("./webext");
 const $ = ext.$;
@@ -30,6 +31,7 @@ $('#ajax').hide();
 $('#message').hide(); 
 if (_PRODUCTION)
 	$('#reset').get(0).remove();
+$('#source>#delete').disable();
 
 //$('#ajax img')..attr('src', ext.runtime.getURL("icons/animate.gif"));
 loadSources();
@@ -93,7 +95,12 @@ function onOptionsUpdated() {
 
 function onSourcesUpdated(sources) {
 	var selected = $('#sources').val();
-	$('#sources>options').each(function(idx) { if (idx>0) this.remove(); }) // remove all existing options
+	var selectEl = $('#sources').get(0);
+	while (selectEl.children.length>1) {
+		DEBUG && log("children delete: " + selectEl.children.length)
+		selectEl.remove(1);
+	}
+
 	var html = '';
 	sources.forEach(function(source) {
 		html += "<option value=\""+source.url+"\">"+_.htmlEncode(source.title)+"</option>\n"
@@ -139,6 +146,23 @@ function htmlToElements(html, rootSelector) {
 	return els;
 }
 
+function getGutenEBookUrl(source) {
+	// given a url for the actual text for a book, back-generate the 'likely' ebook main link
+	//if (source.ebook_url)
+	//	return source.ebook_url; // this NEVER happens, because there's no support for it ;-)
+
+	// use the text url to strip out the eBook's id. eg.
+	//		https://gutenberg.org/cache/epub/9411/pg9411.txt ==> https://www.gutenberg.org/ebooks/9411
+	//		https://gutenberg.org/files/1342/1342-0.txt      ==> https://www.gutenberg.org/ebooks/1342
+	//		https://www.gutenberg.org/ebooks/16328.txt.utf-8 ==> https://www.gutenberg.org/ebooks/16328
+	var results = source.url.match(/\/(\d+)[\/\.\-]/);
+	if (!results || results.length<2)
+		return null;
+	var bookId = results[1]; // result[0] === "/1234/"    result[1] === "1234"
+	return "https://www.gutenberg.org/ebooks/" + bookId;
+
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -147,7 +171,7 @@ function htmlToElements(html, rootSelector) {
 function generate() {
 	const t0 = performance.now();
 	$('#generate').disable();
-	sendMessage({ action: "gp-generate"  }, function(response) {
+	sendMessage({ action: "gp-generate", num_results:5  }, function(response) {
 
 		$('#generate').enable();
 		if (!response) {
@@ -171,12 +195,10 @@ function generate() {
 		$('#password-3').val(words[2]);
 		$('#password-4').val(words[3]);
 		$('#password-5').val(words[4]);
-		$('#source>#title').text(meta.source.title);
-		$('#source>#lang').text(meta.source.language || '');
-		$('#source>#url').text(meta.source.url);
-
-		
-
+		$('#source>#title').text(meta.source.title) // NB: htmlEncode not needed for text()
+			.attr('href', getGutenEBookUrl(meta.source)) 
+			.attr('data-url', meta.source.url);
+		$('#source>#delete').disable(_.isEmpty(meta.source.url));
 	})
 }
 
@@ -211,8 +233,24 @@ $('#sources').on("change", function(e) {
 	  	setTimeout(generate,10); // call generate in a little bit
 	  });
 })
+$("#delete").on("click", function(e) {
+	var url = $('#source>#title').attr('data-url');
+	$(this).disable();
+	sendMessage({action:"gp-deleteSource", url: url}, function(resp) {
+		ext.logLastError('deleteSource');
+		if (resp && resp.error) {
+			alert("Failed to remove the source:\n\n"+resp.error);
+		}
+		loadOptions();
+		loadSources();
+	});
+})
 $("#reset").on("click", function(e) {
 	e.preventDefault();
-	sendMessage({ action: "gp-resetAllData"  }, ext.logLastErrorCB('gp-resetAllData'));
+	sendMessage({ action: "gp-resetAllData"  }, function() { 
+		ext.logLastError('gp-resetAllData');
+		loadOptions();
+		loadSources();
+	});
 	flashMessage("Resetting all data...")
 })

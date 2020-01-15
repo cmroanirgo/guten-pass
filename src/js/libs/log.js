@@ -3,7 +3,7 @@
  * license AGPL
  * Copyright (c) 2017 Craig Monro (cmroanirgo), kodespace.com. All rights reserved.
  **/
-
+'use strict';
  // provides simple logging with a module name attached
  // usage: 
  // const log = require('log').registerLog('some-module');

@@ -26,7 +26,7 @@
 			this.elems = [selector];
 		else if (__.isArray(selector))
 			this.elems = selector;
-		else if (__.isArrayish(selector) && !__.isString(selector))
+		else if (__.isArrayish(selector))
 			this.elems = __.toRealArray(selector)
 		else
 			this.elems = (docObj || document).querySelectorAll(selector); 

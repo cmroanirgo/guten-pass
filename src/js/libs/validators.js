@@ -3,7 +3,7 @@
  * license AGPL
  * Copyright (c) 2017 Craig Monro (cmroanirgo), kodespace.com. All rights reserved.
  **/
-
+'use strict';
 
 // A library of text manipulating routines to format text to be ready to be used by the Wordish plugin.
 
