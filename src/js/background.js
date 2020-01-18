@@ -212,7 +212,7 @@ function addSource(request, sender, responseCB)
 {
 
 	log('Adding a new source...')
-	var source = {title:request.title, url:request.url};
+	var source = {title:request.title, url:request.url, lang:request.lang, lang_iso:request.lang_iso};
 	if (!isValidSource(source)) {
 		return responseCB({error:"Invalid Source."+pls_contact});;
 	}
@@ -221,9 +221,7 @@ function addSource(request, sender, responseCB)
 		return (getDomainPath(src.url) === getDomainPath(source.url));
 	});
 	if (existing && existing.length>0)
-	{
-		return responseCB({error:"Source already exists!"+pls_contact});;
-	}
+		return responseCB({error:"Source already exists!"+pls_contact});
 	else
 		_sources.push(source);
 	saveSources(_sources);
@@ -353,20 +351,30 @@ function generatePasswords(request, sender, responseCB) {
 			sourceObj.text = undefined; // no need to keep this in memory. we have the dictionary!
 			DEBUG && log("Creating password...")
 			var results = [];
+			var num_words = []; // #of words in each result
 			var num_results = request.num_results || 5;
+			var stats = {};// although calculated per dict.createWords, it's actually constant, because our options don't change per iteration
 			while (results.length<num_results)
 			{
 				var words = dict.createWords(options);
+				stats = words.stats;
 				var sep = _.isString(options.separator) ? options.separator : ' ';
+				num_words.push(words.length)
 				words = words.join(sep);
 				results.push(words);
 			}
+			stats.pwdWordCount = undefined;
+			delete stats.pwdWordCount;
+			stats.pwdWordCounts = num_words;
 
 			responseCB({
 				action: "ok",
 				words: results, 
 				meta: {
-					source: source
+					source: source,
+					stats: stats,
+					num_words: num_words,
+					options: options
 					}
 				});
 		}

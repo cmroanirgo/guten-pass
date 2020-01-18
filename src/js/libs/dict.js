@@ -13,6 +13,7 @@
 
 var Randomizer = require('./randomizer');
 var defaultValidator = require('./validators').default;
+var getLetterStats = require('./stats').letter;
 
 
 
@@ -65,6 +66,12 @@ function RootDict() {
 
 RootDict.prototype.reset = function() {
 	this._totalUsage = 0;
+	this._wordCount = 0;
+	this._alphaLetterCount    = 0; // a-z
+	this._alphaCapLetterCount = 0; // A-Z
+	this._numbersCount        = 0; // 0-9
+	this._symbolLetterCount   = 0; // eg &*^%$/{}
+	this._nonAlphaLetterCount = 0; // greek, chinese chars >127
 	this._words = { }; // a map of word to usage eg. 'funkyword':1
 };
 
@@ -92,8 +99,20 @@ RootDict.prototype.createWords = function(options) {
 			throw new Error("Not enough source text to generate a word. Decrease accuracy &/or required word length or add more words");
 		words.push(w);
 	}
+
+	// return extra meta-info about the dictionary and the result set.
+	var totalLetters = this._alphaNumLetterCount + this._symbolLetterCount + this._nonAlphaLetterCount;
+	words.stats = {
+		bookWordCount:  this._wordCount,
+		dictionarySize: src_words.length,
+		pwdWordCount:   words.length,
+		pctAlphaNum:    100*this._alphaNumLetterCount / totalLetters,
+		pctSymbols:     100*this._symbolLetterCount / totalLetters,
+		pctNonAlpha:    100*this._nonAlphaLetterCount / totalLetters
+	}
 	return words;
 };
+
 
 
 RootDict.prototype.learn = function(phrase, options) {
@@ -125,6 +144,17 @@ RootDict.prototype.learn = function(phrase, options) {
 	var _this = this;
 	all_words.forEach(function(word) {
 		_this._words[word] = (_this._words[word] || 0)+1; 
+		if (_this._words[word] === 1) {
+			// this is a new word. gather some extra stats
+			var stats = getLetterStats(word);
+			_this._wordCount++;
+			//_this._alphaNumLetterCount += stats.alphaNum; // !! These will max out at Number.MAX_VALUE !? ASSUME ASSUME we don't get anywhere near these however
+			_this._alphaLetterCount    += stats.alpha; 
+			_this._alphaCapLetterCount += stats.alphaCap; 
+			_this._numbersCount        += stats.num; 
+			_this._symbolLetterCount   += stats.symbols;
+			_this._nonAlphaLetterCount += stats.nonAlpha;
+		}
 		_this._totalUsage++;
 	})
 	return phrase;

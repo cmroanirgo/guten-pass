@@ -39,11 +39,17 @@ $('td[property="dcterms:format"][content*="text/plain"] a[href]').each(function(
 		.on('click', function(e) {
 			e.preventDefault();
 			var title = $('.header>h1').text();
+			var langEl = $('tr[property="dcterms:language"][datatype="dcterms:RFC4646"][content]');
+			var langISO639 = langEl.attr('content')
+			var lang = $('a', langEl.get(0)).text();
+
 			if (confirm("Press OK if you would like to add:\n\n\""+title+"\"\n\nto \"Guten Pass\" Password Generator."))
 			{
 				ext.runtime.sendMessage({
 					action: "gp-addSource",
 					title: title,
+					lang_iso: langISO639,
+					lang: lang,
 					url: el.href
 				}, function(resp) {
 					ext.logLastError("gp-addSource")

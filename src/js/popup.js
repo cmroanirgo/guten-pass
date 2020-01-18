@@ -13,6 +13,8 @@
 const ext = require("./webext");
 const $ = ext.$;
 const _ = ext._;
+const entropy = require("./libs/entropy");
+const statslib = require('./libs/stats');
 
 const sendMessage = ext.runtime.sendMessage.bind(ext.runtime);
 
@@ -190,17 +192,83 @@ function generate() {
 		var t1 = performance.now();
 		DEBUG && log('generated in '+round(t1-t0)+'ms : ' + words);
 
-		$('#password-1').val(words[0]);
-		$('#password-2').val(words[1]);
-		$('#password-3').val(words[2]);
-		$('#password-4').val(words[3]);
-		$('#password-5').val(words[4]);
-		$('#source>#title').text(meta.source.title) // NB: htmlEncode not needed for text()
+		$('#password-1').setPassword(0, words, meta);
+		$('#password-2').setPassword(1, words, meta);
+		$('#password-3').setPassword(2, words, meta);
+		$('#password-4').setPassword(3, words, meta);
+		$('#password-5').setPassword(4, words, meta);
+		$('#source>#dictionary_count').text(meta.stats.dictionarySize + ' of ' + meta.stats.bookWordCount);
+
+		var title = meta.source.title;
+		if (meta.source.lang && meta.source.lang_iso!='en')
+			title += " (" + meta.source.lang + ")";
+
+		$('#source>#title').text(title) // NB: htmlEncode not needed for text()
 			.attr('href', getGutenEBookUrl(meta.source)) 
-			.attr('data-url', meta.source.url);
+			.attr('data-url', meta.source.url)
+			.attr('data-lang', meta.source.lang_iso);
 		$('#source>#delete').disable(_.isEmpty(meta.source.url));
 	})
 }
+
+$.register({
+	setPassword: function(idx, words, meta) {
+		//var numWords = options.numWords;
+		//var randomizeNumWords = options.randomizeNumWords;
+		var el = this.get(0); 
+		words = words[idx];
+		$(el).val(words);
+
+		var dictionary_count = meta.stats.dictionarySize;
+		var num_words = meta.stats.pwdWordCounts[idx];
+		var stats = statslib.letter(words);
+		var numSymbols=0;
+		if (stats.alpha>0) numSymbols += 26;
+		if (stats.alphaCap>0) numSymbols += 26;
+		if (stats.num>0) numSymbols += 10;
+		if (stats.symbols>0) numSymbols += 20; // 20 is common
+		if (stats.nonAlpha>0) {
+			var extra = statslib.langExtraCharCount(meta.source.lang_iso); 
+			if (stats.nonAlpha>extra)
+				extra = stats.nonAlpha;
+			numSymbols += extra;
+		}
+		var separatorCount = 10; // this matches "select#seperator" in options.html.
+		var ent = entropy.wordpick(num_words, dictionary_count, 1); 
+		var ent_db_dictionary = entropy.wordpick(num_words, 5000, 1); // assume a 5000 word dictionary
+		if (stats.alphaCap>0)
+			ent_db_dictionary += entropy.countBits(stats.alphaCap)
+		if (stats.symbols>0)
+			ent_db_dictionary += entropy.countBits(stats.symbols)
+		if (stats.nonAlpha>0 && statslib.langExtraCharCount(meta.source.lang_iso)>0)
+			ent_db_dictionary = Number.INFINITE;
+		var ent_std = entropy.standard(words.length, numSymbols); 
+
+/* http://rumkin.com/tools/password/passchk.php / 
+https://www.pleacher.com/mp/mlessons/algebra/entropy.html
+< 28 bits = Very Weak; might keep out family members
+28 - 35 bits = Weak; should keep out most people, often good for desktop login passwords
+36 - 59 bits = Reasonable; fairly secure passwords for network and company passwords
+60 - 127 bits = Strong; can be good for guarding financial information
+128+ bits = Very Strong; often overkill
+*/
+		var low = 35;
+		var high = 60;
+		var pct = parseInt(Math.round((ent-low)*100/(high-low))); // entropy as a percent. 
+		var hue = pct*1.2; // x1.2 b/c 100% strong == 120 hue/green
+		if (hue<0) hue=0; // don't go beyond red
+		if (hue>120) hue=120; // don't go beyond green
+		var color = "hsl("+hue+",100%,50%)";
+		var strengthEl = el.nextElementSibling.nextElementSibling;
+		$('.line', strengthEl).css('width', (ent*2)+'px').css('background-color', color);
+
+		ent = statslib.round(ent,0);
+		ent_db_dictionary = statslib.round(ent_db_dictionary,0);
+		ent_std = statslib.round(ent_std,0);
+		$('.value', strengthEl).text(ent + ' : ' + ent_db_dictionary +' : ' + ent_std);
+		return this;
+	}
+})
 
 var _flash = null;
 function flashMessage(str) {
