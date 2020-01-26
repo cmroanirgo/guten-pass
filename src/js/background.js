@@ -308,7 +308,7 @@ function generatePasswords(request, sender, responseCB) {
 
 				DEBUG && log('fetching from web...')
 				options.ajaxCallback = function(stage) {
-					sendMessage({action:'gp-ajax', status:stage})
+					sendMessage({action:'gp-ajax', status:stage, source:source})
 				}
 
 				fetchSource(options, 

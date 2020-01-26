@@ -77,6 +77,7 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 			log('gp-ajax status:', request.status);
 			$('#popup input').disable(request.status === 'begin'); // or 'end' is th eone other state
 			$('#ajax').show(request.status === 'begin');
+			$('#ajax #aj-title').text(request.source ? request.source.title : '')
 			break;
 		default:
 			return false;
