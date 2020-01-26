@@ -93,7 +93,7 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     	case 'gp-optionsChanged': // this is sent from popup.js & options.js
     		DEBUG && log("Options changed")
-    		_currentOptions = request.options; 
+    		_currentOptions = _.extend(_currentOptions, request.options); 
     		saveOptions();
     		onOptionsChanged();
     		break;

@@ -12,16 +12,22 @@ function getLetterStats(word) {
 	var num = 0;
 	var symbols = 0;
 	var nonAlpha = 0;
+	var usedSymbols = {};
+	var usedNonAlpha = {};
 	for (var i=0; i<word.length; i++) {
 		var c = word[i];
 		var cp = word.codePointAt(i);
 		if (word[i]>='a' && word[i]<='z') alpha++;
 		else if (word[i]>='A' && word[i]<='Z') alphaCap++;
 		else if (word[i]>='0' && word[i]<='9') num++;
-		else if (cp>127)
+		else if (cp>127) {
 			nonAlpha++;
-		else
+			usedNonAlpha[cp] = (usedNonAlpha[cp] || 0) + 1;
+		}
+		else {
 			symbols++;
+			usedSymbols[c] = (usedSymbols[c] || 0) + 1;
+		}
 	}
 	// sometimes too many stats is a bad thing. alphaNum should be sufficient for std password crack stats/ entropy vs. eg Greek
 	//var alphaNum = alpha + alphaCap + num; 
@@ -32,7 +38,10 @@ function getLetterStats(word) {
 		num: num,
 		//alphaNum: alphaNum, 
 		symbols: symbols, 
-		nonAlpha: nonAlpha }; 
+		nonAlpha: nonAlpha,
+		uniqueSymbols: Object.keys(usedSymbols).length,
+		uniqueNonAlpha: Object.keys(usedNonAlpha).length
+		 }; 
 }
 
 

@@ -20,7 +20,7 @@ const sendMessage = ext.runtime.sendMessage.bind(ext.runtime);
 
 const DEBUG = true && !_PRODUCTION;
 const log = ext.registerLogPROD('gp-popup');
-var _currentOptions = {};
+var _options = {};
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +45,7 @@ function loadOptions() {
 		ext.logLastError('loadOptions');
 
 		if (resp.options)
-			_currentOptions = resp.options;
+			_options = resp.options;
 		onOptionsUpdated();
 	});
 }
@@ -69,7 +69,7 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 		case 'gp-optionsChanged':
 			DEBUG && log("Options changed")
-			_currentOptions = request.options; 
+			_options = request.options; 
 			onOptionsUpdated();
 			break;
 
@@ -90,10 +90,26 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 function onOptionsUpdated() {
 
 	var val = $($('#sources').children().get(0)).val(); // == "random"
-	if (!_.isEmpty(_currentOptions.source_url))
-		val = _currentOptions.source_url;
+	if (!_.isEmpty(_options.source_url))
+		val = _options.source_url;
 	$('#sources').val(val);
+	$('#num-words').val(_options.numWords || 4).copyValToNext();
+	$('#rand-words').val(_options.randomizeNumWords || 1).copyValToNext();
+	$('#min-len').val(_options.minWordLen || 5).copyValToNext();
+	$('#max-len').val(_options.maxWordLen || 10).copyValToNext();
+	$('#separator').val(_options.separator || ' ');
 }
+
+function saveOptions() {
+	_options.source_url = $('#sources').val();
+	_options.numWords = parseInt($('#num-words').val());
+	_options.randomizeNumWords = parseInt($('#rand-words').val());
+	_options.minWordLen = parseInt($('#min-len').val());
+	_options.maxWordLen = parseInt($('#max-len').val());
+	_options.separator = $('#separator').val();
+	sendMessage({action: 'gp-optionsChanged', options: _options}, ext.logLastErrorCB('saveOptions'))
+}
+
 
 function onSourcesUpdated(sources) {
 	var selected = $('#sources').val();
@@ -124,15 +140,24 @@ $.register({
 			
 		});
 		return this;
-	}
+	},
+
+	next: function() { 
+		return $(this.elems[0].nextElementSibling); 
+	},
+
+	copyValToNext: function() {
+		// given: <input...> <span></span>
+		// get the 'input' value and set the span's textContent
+		return this.each(function() {
+			var v = $(this).val();
+			$(this).next().text(v);
+		})
+	}		
 });
 
 function round(val) { return Math.round(val*1000)/1000; } 
 
-function htmlEncode(text) {
-	return text.replace(/\&(?!amp\;)/gi, '&amp;').
-		replace(/\</gi, '&lt;')
-}
 
 /*function htmlToElement(html) {
     var template = document.createElement('template');
@@ -211,6 +236,12 @@ function generate() {
 	})
 }
 
+
+function isEnglish(lang_iso) {
+	return !lang_iso || _.isEmpty(lang_iso) || lang_iso == 'en';
+}
+
+
 $.register({
 	setPassword: function(idx, words, meta) {
 		//var numWords = options.numWords;
@@ -218,6 +249,8 @@ $.register({
 		var el = this.get(0); 
 		words = words[idx];
 		$(el).val(words);
+
+		// const stdEnglishDictSize = entropy.ENGLISH_DICT_SIZE; 
 
 		var dictionary_count = meta.stats.dictionarySize;
 		var num_words = meta.stats.pwdWordCounts[idx];
@@ -229,43 +262,59 @@ $.register({
 		if (stats.symbols>0) numSymbols += 20; // 20 is common
 		if (stats.nonAlpha>0) {
 			var extra = statslib.langExtraCharCount(meta.source.lang_iso); 
-			if (stats.nonAlpha>extra)
-				extra = stats.nonAlpha;
+			if (stats.uniqueNonAlpha>extra) // our statslib function is rudmentry, but correct only on a small set of languages, this helps pick up on others
+				extra = stats.uniqueNonAlpha;
 			numSymbols += extra;
 		}
-		var separatorCount = 10; // this matches "select#seperator" in options.html.
-		var ent = entropy.wordpick(num_words, dictionary_count, 1); 
-		var ent_db_dictionary = entropy.wordpick(num_words, 5000, 1); // assume a 5000 word dictionary
-		if (stats.alphaCap>0)
-			ent_db_dictionary += entropy.countBits(stats.alphaCap)
-		if (stats.symbols>0)
-			ent_db_dictionary += entropy.countBits(stats.symbols)
-		if (stats.nonAlpha>0 && statslib.langExtraCharCount(meta.source.lang_iso)>0)
-			ent_db_dictionary = Number.INFINITE;
-		var ent_std = entropy.standard(words.length, numSymbols); 
 
-/* http://rumkin.com/tools/password/passchk.php / 
-https://www.pleacher.com/mp/mlessons/algebra/entropy.html
-< 28 bits = Very Weak; might keep out family members
-28 - 35 bits = Weak; should keep out most people, often good for desktop login passwords
-36 - 59 bits = Reasonable; fairly secure passwords for network and company passwords
-60 - 127 bits = Strong; can be good for guarding financial information
-128+ bits = Very Strong; often overkill
+		// TODO, chinese & japanese kanji are words -per -letter
+		
+		if (stats.nonAlpha>0 || !isEnglish(meta.source.lang_iso))
+			// foreign langs enjoy instant extra dictionary sized karma ;-)
+			//Note: Middle English (enm) also arrives here, "wych is gud" because it's a different english altogether!
+			dictionary_count += entropy.ENGLISH_DICT_SIZE; 
+		else
+			// perhaps our english words are ALL non-standard... but we should have a baseline just in case
+			// (to make this accurate, we'd need to do word lookups in an ACTUAL std dictionary and compare)
+			dictionary_count = Math.max(dictionary_count, entropy.ENGLISH_DICT_SIZE);
+
+		const dictSpacerSymbols = 10; // see popup.html #separator
+		var ent = entropy.wordpick(num_words, dictionary_count, dictSpacerSymbols); 
+
+/*
+		var ent_std = entropy.standard(words.length, numSymbols)
+
 */
-		var low = 35;
+
+		var low = 28;
 		var high = 60;
-		var pct = parseInt(Math.round((ent-low)*100/(high-low))); // entropy as a percent. 
+		/*var pct = parseInt(Math.round((ent-low)*100/(high-low))); // entropy as a percent. fudge factor
 		var hue = pct*1.2; // x1.2 b/c 100% strong == 120 hue/green
 		if (hue<0) hue=0; // don't go beyond red
 		if (hue>120) hue=120; // don't go beyond green
+		*/
+
+/*
+	< 28 bits = Very Weak; might keep out family members
+	28 - 35 bits = Weak; should keep out most people, often good for desktop login passwords
+	36 - 59 bits = Reasonable; fairly secure passwords for network and company passwords
+	60 - 127 bits = Strong; can be good for guarding financial information
+	128+ bits = Very Strong; often overkill
+*/		
+		var hues       = [ 0, 30, 60, 120, 160, 170 ]; // red, orange, yellow, green, cyan (& cyan. probably not used)
+		var ent_ranges = [ 0, 28, 36,  60, 128, 20000 ]; // 20000 = max === unattainable. Not used
+		var ent_idx = 4;
+		while (ent<ent_ranges[ent_idx] && ent_idx>0)
+			ent_idx--;
+		var hue = hues[ent_idx] + (hues[ent_idx+1] - hues[ent_idx])*(ent-ent_ranges[ent_idx])/(ent_ranges[ent_idx+1]-ent_ranges[ent_idx])/2;
 		var color = "hsl("+hue+",100%,50%)";
 		var strengthEl = el.nextElementSibling.nextElementSibling;
 		$('.line', strengthEl).css('width', (ent*2)+'px').css('background-color', color);
 
 		ent = statslib.round(ent,0);
-		ent_db_dictionary = statslib.round(ent_db_dictionary,0);
-		ent_std = statslib.round(ent_std,0);
-		$('.value', strengthEl).text(ent + ' : ' + ent_db_dictionary +' : ' + ent_std);
+		//ent_db_dictionary = statslib.round(ent_db_dictionary,0);
+		//ent_std = statslib.round(ent_std,0);
+		$('.value', strengthEl).text(ent/* + ' : ' + ent_db_dictionary +' : ' + ent_std*/);
 		return this;
 	}
 })
@@ -280,6 +329,7 @@ function flashMessage(str) {
 		$('#message').text('').hide();
 	}, 2000)
 }
+
 
 $('button.copy').on("click", function(e) {
  	this.previousElementSibling.select(); // Select the adjacent input
@@ -301,6 +351,29 @@ $('#sources').on("change", function(e) {
 	  	setTimeout(generate,10); // call generate in a little bit
 	  });
 })
+
+// ranges
+var _saveDelayTimer;
+function doSaveDelay() {
+	if (_saveDelayTimer)
+		clearTimeout(_saveDelayTimer);
+	_saveDelayTimer = setTimeout(function() {
+		_saveDelayTimer = null;
+		saveOptions();
+		generate();
+	}, 300)
+
+}
+
+$('input[type="range"]').on("input", function(){
+		$(this).copyValToNext();
+		doSaveDelay();
+	}).copyValToNext();
+$('select#separator').on('change', function(e) {
+	doSaveDelay();
+});
+
+
 /*
 $("#delete").on("click", function(e) {
 	var url = $('#source>#title').attr('data-url');

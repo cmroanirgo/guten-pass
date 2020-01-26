@@ -1,9 +1,9 @@
-# Wordish Password Generator
+# Guten-Pass: A Password Generator
 
-This is a password generator that bases it's source dictionary of words from literary works available from Gutenburg.org.
+This is a password generator that bases it's source dictionary of words from literary works available from [Project Gutenberg](https://wwww.gutenberg.org).
 
 
-## Build & Developer Installation
+## Developer Installation & Build
 
 Either download or clone this repo and `cd` to it.
 
@@ -54,5 +54,7 @@ Note: Firefox will always unload this extension after shutting down Firefox.
 
 ## Credits
 
-Thanks to the inspirational work by Bharani, and his [Email This](https://www.emailthis.me) boilerplate. Some of his code has been used (and credited) in this project, but will be morphed and removed over time.
-Main source for this project is based on the skeleton project available [here](https://github.com/cmroanirgo/webextension-template), by yours truly.
+The main source for this project is based on the skeleton project available [here](https://github.com/cmroanirgo/webextension-template), by yours truly.
+
+Thanks to the inspirational work by Bharani, and his [Email This](https://www.emailthis.me) boilerplate. Some of his code has been used (and credited) in the upstream skeleton project, but will be morphed and removed over time.
+

@@ -29,6 +29,35 @@
 						<option value="random">(Random)</option>
 					</select>
 				</label>
+
+				<label>Number of Words:
+					<input type="range" id="num-words" min="2" max="20" value="4"/><span class="range-value">4</span><br>
+				</label>
+				<label>Add Random Number of Words:
+					<input type="range" id="rand-words" min="0" max="10" value="1"/><span class="range-value">1</span><br>
+				</label>
+				<label>Minimum Word Length:
+					<input type="range" id="min-len" min="4" max="19" value="5"/><span class="range-value">5</span><br>
+				</label>
+				<label>Maximum Word Length:
+					<input type="range" id="max-len" min="5" max="20" value="10"/><span class="range-value">10</span><br>
+				</label>
+				<label>Separator:
+					<select id="separator" value=" ">
+						<option value="">(None)</option>
+						<option value=" ">(Space)</option>
+						<option value="-">-</option>
+						<option value=".">.</option>
+						<option value="/">/</option>
+						<option value="|">|</option>
+						<option value="\">\</option>
+						<option value="_">_</option>
+						<option value="+">+</option>
+						<option value="=">=</option>
+					</select>
+				</label>
+
+
 			</div>
 			<div id="ajax">
 				<img src="icons/animate.gif">

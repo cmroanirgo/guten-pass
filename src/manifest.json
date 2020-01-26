@@ -1,6 +1,6 @@
 {
   "name": "Guten Pass: A Password Generator",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "manifest_version": 2,
   "description": "Guten Pass is a password generator (for browsers) using gutenberg texts as source material",
   "icons": {
