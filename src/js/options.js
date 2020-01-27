@@ -36,6 +36,8 @@ const sendMessage = ext.runtime.sendMessage.bind(ext.runtime);
 var _sources = [];
 var _options = {};
 
+const DEFAULT_CUSTOM_SEPS = '+ -_.';
+
 // launch
 loadSources();
 loadOptions();
@@ -95,11 +97,15 @@ function onSourcesUpdated(sources) {
 }
 
 function onOptionsUpdated() {
-	$('#num-words').val(_options.numWords || 4).copyValToNext();
-	$('#rand-words').val(_options.randomizeNumWords || 1).copyValToNext();
+	//$('#num-words').val(_options.numWords || 4).copyValToNext();
+	//$('#rand-words').val(_options.randomizeNumWords || 1).copyValToNext();
+
+	$('#generator-type').val(_options.generatorType || 'words')
 	$('#min-len').val(_options.minWordLen || 5).copyValToNext();
 	$('#max-len').val(_options.maxWordLen || 10).copyValToNext();
 	$('#separator').val(_options.separator || ' ');
+	$('#custom-separator').val(_options.customSeparator || DEFAULT_CUSTOM_SEPS);
+	$('#custom-separator-label').show(_options.separator==="custom");
 }
 
 function updateBytesUsed() {
@@ -110,11 +116,12 @@ function updateBytesUsed() {
 }
 
 function saveOptions() {
-	_options.numWords = parseInt($('#num-words').val());
-	_options.randomizeNumWords = parseInt($('#rand-words').val());
+	//_options.numWords = parseInt($('#num-words').val());
+	//_options.randomizeNumWords = parseInt($('#rand-words').val());
 	_options.minWordLen = parseInt($('#min-len').val());
 	_options.maxWordLen = parseInt($('#max-len').val());
 	_options.separator = $('#separator').val();
+	_options.customSeparator = $('#custom-separator').val();
 	sendMessage({action: 'gp-optionsChanged', options: _options}, ext.logLastErrorCB('saveOptions'))
 }
 
@@ -258,65 +265,76 @@ function validateCustomSource() {
 
 
 
+/*
+$('select').on("change", function() {
+	if ($(this).val()=='custom') {
+		// show (&expand) custom source textarea when user chooses 'Custom...'
+		$('#custom-source-container').addClass('show');
+		$('#custom-more').addClass('show');
+	}
+	else {
+		$('#custom-source-container').removeClass('show'); // hide dlg when user chooses other than 'Custom...'
+		generate();
+	}
+	updateRevealLabelStatus($('#custom-more-btn'), $('#custom-more'))
+	updateGenerateBtnStatus();
+});
+var typing_timeout = -1;
+$('#custom-source').on('input paste', function() {
+	updateGenerateBtnStatus();
+	if (typing_timeout>=0) clearTimeout(typing_timeout);
+	typing_timeout = setTimeout(function() {
+		if (updateGenerateBtnStatus()) 
+			generate();
+	}, 1000);
+});*/
+
+
+$('#generate').on('click', generate)
+$('input:not(#result)').on("change", generate);
+
+
+// ranges
+var _saveDelayTimer;
+function doSaveDelay(timeout) {
+	if (_saveDelayTimer)
+		clearTimeout(_saveDelayTimer);
+	_saveDelayTimer = setTimeout(function() {
+		_saveDelayTimer = null;
+		saveOptions();
+		generate();
+	}, timeout || 300)
+
+}
+
+$('input[type="range"]').on("input", function(){
+		$(this).copyValToNext();
+		doSaveDelay();
+	}).copyValToNext();
+$('#separator').on('change', function(e) {
+	doSaveDelay();
+	$('#custom-separator-label').show($(this).val()==="custom");
+});
+$('#custom-separator').on('input paste', function() {
+	doSaveDelay(600); // slow down the save a bit
+});
+$('#custom-separator-reset').on('click', function(e) {
+	$('#custom-separator').val(DEFAULT_CUSTOM_SEPS);
+	doSaveDelay();
+});
+
+$('#reset-all').on('click', function(e) {
+	e.preventDefault();
+	sendMessage({action: "gp-resetAllData"}, function() {
+		ext.logLastError('reset-all');
+		loadOptions();
+		loadSources();
+		updateBytesUsed();
+	})
+})
+
 
 $(document).ready(function() {
-	$('#generate').on('click', generate)
-	$('input:not(#result)').on("change", generate);
-	/*
-	$('select').on("change", function() {
-		if ($(this).val()=='custom') {
-			// show (&expand) custom source textarea when user chooses 'Custom...'
-			$('#custom-source-container').addClass('show');
-			$('#custom-more').addClass('show');
-		}
-		else {
-			$('#custom-source-container').removeClass('show'); // hide dlg when user chooses other than 'Custom...'
-			generate();
-		}
-		updateRevealLabelStatus($('#custom-more-btn'), $('#custom-more'))
-		updateGenerateBtnStatus();
-	});
-	var typing_timeout = -1;
-	$('#custom-source').on('input paste', function() {
-		updateGenerateBtnStatus();
-		if (typing_timeout>=0) clearTimeout(typing_timeout);
-		typing_timeout = setTimeout(function() {
-			if (updateGenerateBtnStatus()) 
-				generate();
-		}, 1000);
-	});*/
-
-	// ranges
-	var _saveDelayTimer;
-	function doSaveDelay() {
-		if (_saveDelayTimer)
-			clearTimeout(_saveDelayTimer);
-		_saveDelayTimer = setTimeout(function() {
-			_saveDelayTimer = null;
-			saveOptions();
-			generate();
-		}, 300)
-
-	}
-
-	$('input[type="range"]').on("input", function(){
-			$(this).copyValToNext();
-			doSaveDelay();
-		}).copyValToNext();
-	$('select').on('change', function(e) {
-		doSaveDelay();
-	});
-	$('#reset-all').on('click', function(e) {
-		e.preventDefault();
-		sendMessage({action: "gp-resetAllData"}, function() {
-			ext.logLastError('reset-all');
-			loadOptions();
-			loadSources();
-			updateBytesUsed();
-		})
-	})
-
-
 	generate();
 }); 
 

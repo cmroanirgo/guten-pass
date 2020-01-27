@@ -10,6 +10,7 @@
  <section id="options">
  	<h1>Guten-Pass Options</h1>
 
+<!--
 	<label for="num-words">Number of Words</label>
 	<input type="range" id="num-words" min="2" max="20" value="4"/><span class="range-value">4</span><br>
 	<label for="rand-words">Add Random Number of Words</label>
@@ -31,6 +32,39 @@
 		<option value="+">+</option>
 		<option value="=">=</option>
 	</select><br>
+-->
+	<label>Password type:
+		<select id="generator-type" value="words">
+			<option value="words">Random Words</option>
+			<option value="phrase">Phrase</option>
+			<option value="leet">l337 Phrase</option>
+		</select>
+	</label>
+	<label>Minimum Target Strength:
+		<input type="range" id="strength" min="36" max="129" value="44"/><span class="range-value">44</span>
+	</label>
+	<label>Minimum Word Length:
+		<input type="range" id="min-len" min="3" max="10" value="3"/><span class="range-value">3</span>
+	</label>
+	<label>Maximum Word Length:
+		<input type="range" id="max-len" min="5" max="20" value="10"/><span class="range-value">10</span>
+	</label>
+	<label>Separator:
+		<select id="separator" value=" ">
+			<option value="">(None)</option>
+			<option value=" ">(Space)</option>
+			<option value="custom">Custom</option>
+		</select><br>
+	</label>
+	<label id="custom-separator-label">Custom Separator:
+		<input id="custom-separator" value="+ -_."/><button id="custom-separator-reset">Reset</button><span> (One of these are randomly chosen)</span>
+		
+	</label>
+	<!-- <label id="symbols-label">Valid Symbols:
+		<input id="custom-symbols" value=" +-_."/><span>(excluding a-Z 0-9)</span>
+	</label>-->
+
+
 
 	<button id="generate">Generate</button><br/>
 	<input id="result" readonly="readonly" type="text" />

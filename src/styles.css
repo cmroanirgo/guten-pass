@@ -11,9 +11,9 @@ html.popup button>img { vertical-align: text-bottom; }
 html.popup button:hover { border-color:#555; background-color: #f7f7f7}
 html.popup button.copy { font-size:0.8em; height:18px; width:37px; padding:0; margin: 0 0 0 3px;vertical-align: top;}
 html.popup button#generate { }
-html.popup button#settings { position: absolute; right: 10px;  /* 10px matches parent padding */
-				line-height: 1px; height: 23px; /* FFox alignment */
-
+html.popup button#settings { 
+	position: absolute; right: 10px;  /* 10px matches parent padding */
+	line-height: 1px; height: 23px;   /* FFox alignment fixes */
 }
 html.popup button#settings img { margin:0; padding:0;}
 html.popup select { width: 280px; }
@@ -37,5 +37,6 @@ html.options #sources>div.source>div { display:table-cell; padding: 2px 5px;}
 html.options #sources>div.source>div:last-child { white-space: nowrap;}
 html.options #sources>div.source>div:last-child>*:not(:first-child) { margin-left: 3px; }
 html.options .load, html.options .unload { display: none;  }
+html.options label { display: block; }
 html.options input#result { width: 80%;}
 html.options button#generate { padding: 0.2em 0.3em; font-size: 1em; margin:0.5em 0;}

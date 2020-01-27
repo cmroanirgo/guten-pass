@@ -11,17 +11,11 @@
 /// NB. Although this should be ooodles faster than Wordish, there's been no attempt to ensure this is the quickest way to build the list
 // This will probably be a more memory hungry solution.
 
-var Randomizer = require('./randomizer');
+var rand = require('./crypto-random');
 var defaultValidator = require('./validators').default;
 var getLetterStats = require('./stats').letter;
 
 
-
-
-function rand(from, to) {
-	var r = new Randomizer(1);
-	return r.generate(from, to); 
-}
 
 function extend(origin) { // copied from electron-api-demos/node_modules/glob/glob.js & then hacked to oblivion
 	// now, you can keep extending, by using
@@ -86,13 +80,14 @@ RootDict.prototype.createWords = function(options) {
 		return word.length>=options.minWordLen && word.length<=options.maxWordLen;
 	})
 
+	//TODO. make this strength based
 	var words = [];
-	var numWords = options.numWords + (options.randomizeNumWords>0 ? rand(0, options.randomizeNumWords): 0);
-	while (numWords-->0){
+	var numWords = (options.numWords || 4) + (options.randomizeNumWords>0 ? rand(0, options.randomizeNumWords): 0);
+	while (numWords-->0 && src_words.length>0){
 		var attempts = 50; // 50 attempts to find unique words 
 		do
 		{
-			var w = src_words[rand(0,src_words.length-1)];
+			var w = src_words[rand(0,src_words.length)];
 
 		} while (words.indexOf(w)>=0 && attempts-->0)
 		if (!attempts)
@@ -160,11 +155,6 @@ RootDict.prototype.learn = function(phrase, options) {
 	return phrase;
 };
 
-
-// static
-RootDict.random = function(from, to) { 
-	return rand(from, to);
-};
 
 
 

@@ -16,6 +16,7 @@ const _ = ext._;
 const Dict = require('./libs/dict');
 const validators = require('./libs/validators');
 const fetchSource = require('./libs/fetch');
+const rand = require('./libs/crypto-random');
 
 const sendMessage = ext.runtime.sendMessage.bind(ext.runtime);
 
@@ -260,6 +261,11 @@ function generatePasswords(request, sender, responseCB) {
 	//if (!options.url && !options.text && !options.dictionary && !options.randomSource)
 	//	throw new Error("Need to specify a url, text, or randomSource=true for password generator");
 
+	if (!_sources.length) {
+		responseCB({error: new Error('Missing list of sources')});
+		return;
+	}
+
 	var source; // = undefined;
 	if (!_.isEmpty(options.source_url)) {
 		// try and find the source url
@@ -271,13 +277,11 @@ function generatePasswords(request, sender, responseCB) {
 		})
 	}
 	if (options.randomSource || !source) {
-		source = _sources[Dict.random(0, _sources.length-1)];
+		source = rand.array(_sources); 
 		DEBUG && log("Randomly chose: \""+source.title+"\". url: " + source.url)
 		options.url = source.url;
 	}
-	if (source) {
-		DEBUG && log("source is \""+source.title+"\"")
-	}
+	DEBUG && log("source is \""+source.title+"\"");
 
 	// TODO. Proxy is needed for chrome. Fails on Firefox
 	var proxy = null; // "https://cors-anywhere.herokuapp.com/" + 
@@ -359,6 +363,9 @@ function generatePasswords(request, sender, responseCB) {
 				var words = dict.createWords(options);
 				stats = words.stats;
 				var sep = _.isString(options.separator) ? options.separator : ' ';
+				if (sep==="custom")
+					sep = rand.array(options.customSeparator, '') // empty if an error, which is probably what user wants
+					
 				num_words.push(words.length)
 				words = words.join(sep);
 				results.push(words);
