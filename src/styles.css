@@ -1,12 +1,17 @@
 * { box-sizing: border-box; }
 html { padding:0; margin:0;} 
-html.popup body { width: 350px; overflow:hidden; background-color:#f0f0f0; padding:0; margin:0; font-family: sans-serif,sans,arial;}
-html.popup body>div { padding: 10px; padding: 10px;}
-html.popup footer { border-top: 1px solid #e0e0e0; padding: 10px;background-color:white; position: relative;}
-html.popup input { width: 290px; }
+html.popup body { width: 350px; position: relative; overflow:hidden; background-color:#f0f0f0; padding:0; margin:0; font-family: sans-serif,sans,arial;}
+html.popup body>div { padding: 10px; position: relative;}
+html.popup body>div:not(:first-child) {border-top: 1px solid #d0d0d0; }
+html.popup footer { border-top: 1px solid #d0d0d0; padding: 10px;background-color:white; position: relative;}
+html.popup input { width: 290px; border-radius: 4px; border: 1px solid #bbb;}
 html.popup label { min-width: 30%; }
-html.popup button.copy { cursor: pointer; font-size:0.8em; height:18px; width:40px; padding: 0; margin: auto;}
-html.popup button#generate { cursor: pointer; margin-top:5px;font-size:1.2em;}
+html.popup button { cursor: pointer; margin-top:5px;font-size:1.2em; border-radius: 4px; border: 1px solid #bbb;}
+html.popup button>img { vertical-align: text-bottom; }
+html.popup button:hover { border-color:#555; background-color: #f7f7f7}
+html.popup button.copy { font-size:0.8em; height:18px; width:37px; padding:0; margin: 0 0 0 3px;vertical-align: top;}
+html.popup button#generate { }
+html.popup button#settings { position: absolute; right: 10px } /* 10px matches parent padding */
 html.popup select { width: 280px; }
 html.popup #source { margin-top:0.8em; font-size: 0.75em;}
 html.popup #options { margin-top:0.8em; font-size: 0.75em;}
@@ -20,11 +25,13 @@ html.popup .strength>.value { font-size:10px; line-height: 7px; margin:0; paddin
 
 
 html.options body { font-family: sans-serif,sans,arial;}
-html.options section { padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid #f7f7f7;}
+html.options section { padding-bottom: 10px; margin: 0 auto 10px; min-width: 320px; width:50%; border-bottom: 1px solid #f7f7f7;}
 html.options #sources { display:table; }
 html.options #sources>div.source { display:table-row; }
 html.options #sources>div.source:nth-child(even) { background-color: #f0f0ff; }
 html.options #sources>div.source>div { display:table-cell; padding: 2px 5px;}
+html.options #sources>div.source>div:last-child { white-space: nowrap;}
+html.options #sources>div.source>div:last-child>*:not(:first-child) { margin-left: 3px; }
 html.options .load, html.options .unload { display: none;  }
 html.options input#result { width: 80%;}
 html.options button#generate { padding: 0.2em 0.3em; font-size: 1em; margin:0.5em 0;}

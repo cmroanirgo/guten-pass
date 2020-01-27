@@ -6,6 +6,10 @@
 		<link href="styles.css" rel="stylesheet">
 	</head>
 	<body id="popup">
+		<div>
+			<button id="generate">Generate</button> 
+			<button id="settings"><img src='icons/settings-16.png'></button> 
+		</div>
  		<div>
 			<input id="password-1" /><button id="copy-1" class="copy">copy</button>
 			<div  id="strength-1" class="strength" /><span class="line">&nbsp;</span><span class="value"></span></div>
@@ -17,11 +21,12 @@
 			<div  id="strength-4" class="strength" /><span class="line">&nbsp;</span><span class="value"></span></div>
 			<input id="password-5" /><button id="copy-5" class="copy">copy</button>
 			<div  id="strength-5" class="strength" /><span class="line">&nbsp;</span><span class="value"></span></div>
-			<button id="generate">Generate</button>
 
 			<div id="source">
 				Passwords sourced from <span id="dictionary_count">0</span> words in: <a id="title" target="_new"></a>
 			</div>
+		</div>
+		<div>
 
 			<div id="options">
 				<label>Source: 

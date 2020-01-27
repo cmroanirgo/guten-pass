@@ -342,6 +342,10 @@ $("#generate").on("click", function(e) {
 	e.preventDefault();
 	generate();
 })
+$('#settings').on("click", function(e) {
+	e.preventDefault();
+	ext.runtime.openOptionsPage();
+})
 $('#sources').on("change", function(e) {
 	e.preventDefault();
 	sendMessage({ action: "gp-setSource",
