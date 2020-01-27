@@ -118,6 +118,7 @@ function updateBytesUsed() {
 function saveOptions() {
 	//_options.numWords = parseInt($('#num-words').val());
 	//_options.randomizeNumWords = parseInt($('#rand-words').val());
+	_options.generatorType = $('#generator-type').val();
 	_options.minWordLen = parseInt($('#min-len').val());
 	_options.maxWordLen = parseInt($('#max-len').val());
 	_options.separator = $('#separator').val();

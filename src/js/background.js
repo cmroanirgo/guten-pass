@@ -171,31 +171,42 @@ function onSourcesChanged() {
 //
 var _global_cache = {};
 
-function getCachedUrlObj(url, cb) {
-	const key = "url:"+url;
+function __urlToKey(url) {
+	return "url:"+url;
+}
+function getUrlCache(url, generatorType, cb) {
+	const key = __urlToKey(url);
 	var obj = _global_cache[key];
-	if (obj && obj.dictionary) {
+	if (obj && obj.generator && obj.generatorType === generatorType) {
+		// we've previously worked with this url AND generator 
 		cb(obj);
 		return;
 	}
 		
+	// object not in the cache, OR we've switched generatorTypes... reload from disk
 
 	obj = {};
 	storage.get(key, function(resp){
-		ext.logLastError('getCachedUrlObj');
+		ext.logLastError('getUrlCache');
 		if (resp[key])
 			obj.text = resp[key].text;
+		obj.generatorType = generatorType;
 		cb(obj);
 	})
 }
-function storeCachedUrlObj(url, obj) {
+
+function setUrlCache(url, obj) {
 	DEBUG && log("Storing cached url: " + url);
-	const key = "url:"+url;
-	_global_cache[key] = obj;
-	var s = {};
-	s[key] = {text:obj.text+''};
-	obj.text =  undefined; // don't need this in memory anymore!
-	storage.set(s, 	ext.logLastErrorCB('storeCachedUrlObj'))
+	const key = __urlToKey(url);
+	_global_cache[key] = obj; // store in memory, including generator
+	if (obj.text) {
+		var s = {};
+		s[key] = {text:obj.text};
+		storage.set(s, 	ext.logLastErrorCB('storeUrl'))
+	}
+	else {
+		DEBUG && log.error("obj.text is missing for url: " + url);
+	}
 }
 
 
@@ -255,10 +266,11 @@ function deleteSource(request, sender, responseCB)
 	return responseCB({action: "ok"});
 }
 
+
 function generatePasswords(request, sender, responseCB) {
 	var options = _.extend({}, _currentOptions, request.options||{});
 
-	//if (!options.url && !options.text && !options.dictionary && !options.randomSource)
+	//if (!options.url && !options.text && !options.generator && !options.randomSource)
 	//	throw new Error("Need to specify a url, text, or randomSource=true for password generator");
 
 	if (!_sources.length) {
@@ -283,28 +295,37 @@ function generatePasswords(request, sender, responseCB) {
 	}
 	DEBUG && log("source is \""+source.title+"\"");
 
-	// TODO. Proxy is needed for chrome. Fails on Firefox
-	var proxy = null; // "https://cors-anywhere.herokuapp.com/" + 
+	const generatorType = options.generatorType || "words";
 
 	// fetch source from cache/ local storage
-	getCachedUrlObj(options.url, function(sourceObj) {
+	getUrlCache(options.url, generatorType, function(sourceObj) {
 
-		var dict;
-		if (!sourceObj.dictionary) {
+		var generator;
+		if (!sourceObj.generator) {
 			// most of the time
 
 			var learnOptions = _.extend({}, _learnOptions);
 
-			dict = new Dict();
+			// make a new generator
+			switch (generatorType) {
+				case "words":
+					generator = new Dict();
+					break;
+				case "phrase":
+				case "leet":
+				default:
+					log.error("Not implemented, generatorType="+generatorType);
+					break;
+			}
 
 			// fetched from cache or local?
 			if (sourceObj.text) {
 				// already fetched
 				log(options, "Reusing fetched text")
 				DEBUG && log('learning...')
-				dict.learn(sourceObj.text, learnOptions);	
+				generator.learn(sourceObj.text, learnOptions);	
 				DEBUG && log('generating...')
-				_generate(dict)	
+				_generate(generator)	
 			}
 			else
 			{				
@@ -330,12 +351,13 @@ function generatePasswords(request, sender, responseCB) {
 							text = validator(text);
 
 						sourceObj.text = text;
-						storeCachedUrlObj(options.url, sourceObj)
+						setUrlCache(options.url, sourceObj)
+						sourceObj.text = undefined; // we have the generator. no need to keep the raw text in memory (& setUrlCache stores to disk)
 
 						DEBUG && log('learning...')
-						dict.learn(text, learnOptions);	
+						generator.learn(text, learnOptions);	
 						DEBUG && log('generating...')
-						_generate(dict)	
+						_generate(generator)	
 					}
 				);
 			}
@@ -344,29 +366,33 @@ function generatePasswords(request, sender, responseCB) {
 		else
 		{
 			// re-use whatever's been learnt
-			DEBUG && log("Reusing dictionary...")
-			dict = sourceObj.dictionary;
-			_generate(dict)	
+			DEBUG && log("Reusing generator: " + generatorType);
+			generator = sourceObj.generator;
+			_generate(generator)	
 		}
 
 
-		function _generate(dict) {
-			sourceObj.dictionary = dict; // updated the cached obj to include the dictionary (for next time). No need to explicity store it again
-			sourceObj.text = undefined; // no need to keep this in memory. we have the dictionary!
+		function _generate(generator) {
+			sourceObj.generator = generator; // update the cached obj to include the generator (for next time). No need to explicity store it again
+			sourceObj.generatorType = generatorType; // NB: This *IS* redundant, as getUrlCache() ensures this is filled out, but is here for clarity
+			sourceObj.text = undefined; // no need to keep this in memory. we have the generator! This is also redundant, but is here for clarity
 			DEBUG && log("Creating password...")
+
 			var results = [];
 			var num_words = []; // #of words in each result
 			var num_results = request.num_results || 5;
 			var stats = {};// although calculated per dict.createWords, it's actually constant, because our options don't change per iteration
 			while (results.length<num_results)
 			{
-				var words = dict.createWords(options);
+				var words = generator.createWords(options);
+
+				// TODO move this into generator & make it return password strength
 				stats = words.stats;
 				var sep = _.isString(options.separator) ? options.separator : ' ';
 				if (sep==="custom")
 					sep = rand.array(options.customSeparator, '') // empty if an error, which is probably what user wants
 					
-				num_words.push(words.length)
+				num_words.push(words.length); // TODO change this to stats.push
 				words = words.join(sep);
 				results.push(words);
 			}
