@@ -11,7 +11,11 @@ html.popup button>img { vertical-align: text-bottom; }
 html.popup button:hover { border-color:#555; background-color: #f7f7f7}
 html.popup button.copy { font-size:0.8em; height:18px; width:37px; padding:0; margin: 0 0 0 3px;vertical-align: top;}
 html.popup button#generate { }
-html.popup button#settings { position: absolute; right: 10px } /* 10px matches parent padding */
+html.popup button#settings { position: absolute; right: 10px;  /* 10px matches parent padding */
+				line-height: 1px; height: 23px; /* FFox alignment */
+
+}
+html.popup button#settings img { margin:0; padding:0;}
 html.popup select { width: 280px; }
 html.popup #source { margin-top:0.8em; font-size: 0.75em;}
 html.popup #options { margin-top:0.8em; font-size: 0.75em;}
