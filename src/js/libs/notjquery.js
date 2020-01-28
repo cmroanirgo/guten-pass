@@ -125,11 +125,16 @@
 		},
 		enable : function() { 	return this.disable(false); },
 		// replaceWith: function (value) {this.each(function(i, el) { el.outerHTML = value;});  return this;  },
-		attr: function /*attr*/(atr,value) {
-			if ( value === undefined) {
+		attr: function /*attr*/() {
+			const atr = arguments[0];
+			if ( arguments.length === 1) {
 				return !this.elems.length ? undefined : this.elems[0].getAttribute(atr);
 			}
-			this.each(function(i, el) { el.setAttribute(atr, value); }); 
+			const value = arguments[1];
+			if (value === undefined)
+				this.each(function(i, el) { el.removeAttribute(atr); }); 
+			else
+				this.each(function(i, el) { el.setAttribute(atr, value); }); 
 			return this; 
 		},
 		is: function /*is*/(selector) {
