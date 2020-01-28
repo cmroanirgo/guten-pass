@@ -109,9 +109,11 @@ function countBits(num) { // don't use. ambiguous. use standard(1, num) instead
 }
 
 module.exports = {
-	ENGLISH_DICT_SIZE: 2048, // # words in english dict. this gives E=44 for 4 words.
+	//ENGLISH_DICT_SIZE: 2048, // # words in english dict. this gives E=44 for 4 words. 
+	ENGLISH_DICT_SIZE: 5000, // NB: We DON'T require('./english').size, so that the whole english dict won't be loaded uncessarily into popup or options
 	standard: standard,
 	//diceroll: diceroll,
 	wordpick: wordpick,
 	countBits: countBits
 };
+

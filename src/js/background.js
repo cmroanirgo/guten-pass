@@ -270,9 +270,6 @@ function deleteSource(request, sender, responseCB)
 function generatePasswords(request, sender, responseCB) {
 	var options = _.extend({}, _currentOptions, request.options||{});
 
-	//if (!options.url && !options.text && !options.generator && !options.randomSource)
-	//	throw new Error("Need to specify a url, text, or randomSource=true for password generator");
-
 	if (!_sources.length) {
 		responseCB({error: new Error('Missing list of sources')});
 		return;
@@ -294,6 +291,7 @@ function generatePasswords(request, sender, responseCB) {
 		options.url = source.url;
 	}
 	DEBUG && log("source is \""+source.title+"\"");
+	options.lang_iso = source.lang_iso || 'en'; // assume english if missing
 
 	const generatorType = options.generatorType || "words";
 
@@ -379,34 +377,18 @@ function generatePasswords(request, sender, responseCB) {
 			DEBUG && log("Creating password...")
 
 			var results = [];
-			var num_words = []; // #of words in each result
 			var num_results = request.num_results || 5;
-			var stats = {};// although calculated per dict.createWords, it's actually constant, because our options don't change per iteration
 			while (results.length<num_results)
 			{
-				var words = generator.createWords(options);
-
-				// TODO move this into generator & make it return password strength
-				stats = words.stats;
-				var sep = _.isString(options.separator) ? options.separator : ' ';
-				if (sep==="custom")
-					sep = rand.array(options.customSeparator, '') // empty if an error, which is probably what user wants
-					
-				num_words.push(words.length); // TODO change this to stats.push
-				words = words.join(sep);
-				results.push(words);
+				var result = generator.createWords(options); // returns { password, stats }
+				results.push({password:result.password, stats:result.stats }); // make [ { password, stats }, { password, stats } ]
 			}
-			stats.pwdWordCount = undefined;
-			delete stats.pwdWordCount;
-			stats.pwdWordCounts = num_words;
 
 			responseCB({
 				action: "ok",
-				words: results, 
+				data: results, 
 				meta: {
 					source: source,
-					stats: stats,
-					num_words: num_words,
 					options: options
 					}
 				});

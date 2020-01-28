@@ -212,18 +212,19 @@ function generate() {
 			return;
 		}
 
-		var words = response.words;
+		const data = response.data;
 		var meta = response.meta;
 
 		var t1 = performance.now();
-		DEBUG && log('generated in '+round(t1-t0)+'ms : ' + words);
+		DEBUG && log('generated in '+round(t1-t0)+'ms:', data, meta);
 
-		$('#password-1').setPassword(0, words, meta);
-		$('#password-2').setPassword(1, words, meta);
-		$('#password-3').setPassword(2, words, meta);
-		$('#password-4').setPassword(3, words, meta);
-		$('#password-5').setPassword(4, words, meta);
-		$('#source>#dictionary_count').text(meta.stats.dictionarySize + ' of ' + meta.stats.bookWordCount);
+		$('#password-1').setPassword(0, data);
+		$('#password-2').setPassword(1, data);
+		$('#password-3').setPassword(2, data);
+		$('#password-4').setPassword(3, data);
+		$('#password-5').setPassword(4, data);
+		var stats = data[0].stats;
+		$('#source>#dictionary_count').text(stats.sourceWordCount + ' of ' + stats.sourceWordCountMax);
 
 		var title = meta.source.title;
 		if (meta.source.lang && meta.source.lang_iso!='en')
@@ -244,13 +245,14 @@ function isEnglish(lang_iso) {
 
 
 $.register({
-	setPassword: function(idx, words, meta) {
+	setPassword: function(idx, data) {
 		//var numWords = options.numWords;
 		//var randomizeNumWords = options.randomizeNumWords;
 		var el = this.get(0); 
-		words = words[idx];
-		$(el).val(words);
+		var stats = data[idx].stats;
+		$(el).val(data[idx].password);
 
+/*
 		// const stdEnglishDictSize = entropy.ENGLISH_DICT_SIZE; 
 
 		var dictionary_count = meta.stats.dictionarySize;
@@ -281,19 +283,11 @@ $.register({
 
 		const dictSpacerSymbols = 10; // see popup.html #separator
 		var ent = entropy.wordpick(num_words, dictionary_count, dictSpacerSymbols); 
-
+*/
 /*
 		var ent_std = entropy.standard(words.length, numSymbols)
 
 */
-
-		var low = 28;
-		var high = 60;
-		/*var pct = parseInt(Math.round((ent-low)*100/(high-low))); // entropy as a percent. fudge factor
-		var hue = pct*1.2; // x1.2 b/c 100% strong == 120 hue/green
-		if (hue<0) hue=0; // don't go beyond red
-		if (hue>120) hue=120; // don't go beyond green
-		*/
 
 /*
 	< 28 bits = Very Weak; might keep out family members
@@ -305,6 +299,7 @@ $.register({
 		var hues       = [ 0, 30, 60, 120, 160, 170 ]; // red, orange, yellow, green, cyan (& cyan. probably not used)
 		var ent_ranges = [ 0, 28, 36,  60, 128, 20000 ]; // 20000 = max === unattainable. Not used
 		var ent_idx = 4;
+		var ent = stats.strength;
 		while (ent<ent_ranges[ent_idx] && ent_idx>0)
 			ent_idx--;
 		var hue = hues[ent_idx] + (hues[ent_idx+1] - hues[ent_idx])*(ent-ent_ranges[ent_idx])/(ent_ranges[ent_idx+1]-ent_ranges[ent_idx])/2;

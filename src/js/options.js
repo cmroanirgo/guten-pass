@@ -101,6 +101,7 @@ function onOptionsUpdated() {
 	//$('#rand-words').val(_options.randomizeNumWords || 1).copyValToNext();
 
 	$('#generator-type').val(_options.generatorType || 'words')
+	$('#strength').val(_options.passwordStrength || 44).copyValToNext();
 	$('#min-len').val(_options.minWordLen || 5).copyValToNext();
 	$('#max-len').val(_options.maxWordLen || 10).copyValToNext();
 	$('#separator').val(_options.separator || ' ');
@@ -119,6 +120,7 @@ function saveOptions() {
 	//_options.numWords = parseInt($('#num-words').val());
 	//_options.randomizeNumWords = parseInt($('#rand-words').val());
 	_options.generatorType = $('#generator-type').val();
+	_options.passwordStrength = $('#strength').val();
 	_options.minWordLen = parseInt($('#min-len').val());
 	_options.maxWordLen = parseInt($('#max-len').val());
 	_options.separator = $('#separator').val();
