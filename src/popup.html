@@ -6,11 +6,11 @@
 		<link href="styles.css" rel="stylesheet">
 	</head>
 	<body id="popup">
-		<div>
-			<button id="generate">Generate</button> 
+		<section>
 			<button id="settings"><img src='icons/settings-16.png'></button> 
-		</div>
- 		<div>
+			<button id="generate">Generate</button> 
+		</section>
+ 		<section>
 			<input id="password-1" /><button id="copy-1" class="copy">copy</button>
 			<div  id="strength-1" class="strength" /><span class="line">&nbsp;</span><span class="value"></span></div>
 			<input id="password-2" /><button id="copy-2" class="copy">copy</button>
@@ -25,51 +25,33 @@
 			<div id="source">
 				Passwords sourced from <span id="dictionary_count">0</span> words in: <a id="title" target="_new"></a>
 			</div>
-		</div>
-		<div>
+		</section>
+		<section id="options">
+			<label>Password type:
+				<select id="generator-type" value="words">
+					<option value="words">Random Words</option>
+					<option value="phrase">Phrase</option>
+					<option value="leet">l337 Phrase</option>
+					<option value="en-words">Words from Hacker&apos;s Dictionary</option>
+				</select>
+			</label>
 
-			<div id="options">
-				<label>Source: 
-					<select id="sources">
-						<option value="random">(Random)</option>
-					</select>
-				</label>
+			<label>Minimum Target Strength:
+				<input type="range" id="strength" min="36" max="129" value="44"/><span class="range-value">44</span>
+			</label>
 
-				<label>Number of Words:
-					<input type="range" id="num-words" min="2" max="20" value="4"/><span class="range-value">4</span><br>
-				</label>
-				<label>Add Random Number of Words:
-					<input type="range" id="rand-words" min="0" max="10" value="1"/><span class="range-value">1</span><br>
-				</label>
-				<label>Minimum Word Length:
-					<input type="range" id="min-len" min="4" max="19" value="5"/><span class="range-value">5</span><br>
-				</label>
-				<label>Maximum Word Length:
-					<input type="range" id="max-len" min="5" max="20" value="10"/><span class="range-value">10</span><br>
-				</label>
-				<label>Separator:
-					<select id="separator" value=" ">
-						<option value="">(None)</option>
-						<option value=" ">(Space)</option>
-						<option value="-">-</option>
-						<option value=".">.</option>
-						<option value="/">/</option>
-						<option value="|">|</option>
-						<option value="\">\</option>
-						<option value="_">_</option>
-						<option value="+">+</option>
-						<option value="=">=</option>
-					</select>
-				</label>
+			<label id="sources-label">Source: 
+				<select id="sources">
+					<option value="random">(Random)</option>
+				</select>
+			</label>
 
-
-			</div>
-			<div id="ajax">
-				<img src="icons/animate.gif">
-				<p>Loading...</p>
-				<p id="aj-title"></p>
-			</div>
-		</div>
+		</section>
+		<section id="ajax">
+			<img src="icons/animate.gif">
+			<p>Loading...</p>
+			<p id="aj-title"></p>
+		</section>
 		<footer>
 			Want more variety? Choose a new book from <a href="https://gutenberg.org" target="_new">gutenberg.org</a> &amp; look for the <i>"Guten Pass"</i> button.<br>
 			<button id="reset">Reset Data</button>

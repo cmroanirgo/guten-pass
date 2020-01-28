@@ -17,12 +17,13 @@ const Dict = require('./libs/dict');
 const validators = require('./libs/validators');
 const fetchSource = require('./libs/fetch');
 const rand = require('./libs/crypto-random');
+const english = require('./libs/english');
 
 const sendMessage = ext.runtime.sendMessage.bind(ext.runtime);
 
 const DEBUG = true && !_PRODUCTION;
 const log = ext.registerLogPROD('gp-background');
-
+const INTERNAL_DICT = "internal-dict"; // aka english50000
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -183,14 +184,22 @@ function getUrlCache(url, generatorType, cb) {
 		return;
 	}
 		
+	obj = {	generatorType: generatorType };
+
 	// object not in the cache, OR we've switched generatorTypes... reload from disk
 
-	obj = {};
+
+	if (url===INTERNAL_DICT) { // use inbuilt dictionary
+		obj.text = english.words;
+		cb(obj);
+		return;
+	}
+
+	// load from disk
 	storage.get(key, function(resp){
 		ext.logLastError('getUrlCache');
 		if (resp[key])
 			obj.text = resp[key].text;
-		obj.generatorType = generatorType;
 		cb(obj);
 	})
 }
@@ -200,9 +209,16 @@ function setUrlCache(url, obj) {
 	const key = __urlToKey(url);
 	_global_cache[key] = obj; // store in memory, including generator
 	if (obj.text) {
-		var s = {};
-		s[key] = {text:obj.text};
-		storage.set(s, 	ext.logLastErrorCB('storeUrl'))
+		if (url===INTERNAL_DICT) {
+			// don't save
+		}
+		else
+		{
+			var s = {};
+			s[key] = {text:obj.text};
+			storage.set(s, 	ext.logLastErrorCB('storeUrl'))
+
+		}
 	}
 	else {
 		DEBUG && log.error("obj.text is missing for url: " + url);
@@ -275,25 +291,40 @@ function generatePasswords(request, sender, responseCB) {
 		return;
 	}
 
+	const generatorType = options.generatorType || "words";
+
 	var source; // = undefined;
-	if (!_.isEmpty(options.source_url)) {
-		// try and find the source url
-		_sources.forEach(function(src) {
-			if (src.url === options.source_url) {
-				source = src;
-				options.url = source.url;
-			}
-		})
+
+	if (generatorType !== 'en-words') 
+	{
+		if (!_.isEmpty(options.source_url)) {
+			// try and find the source url
+			_sources.forEach(function(src) {
+				if (src.url === options.source_url) {
+					source = src;
+					options.url = source.url;
+				}
+			})
+		}
+		if (options.randomSource || !source) {
+			source = rand.array(_sources); 
+			DEBUG && log("Randomly chose: \""+source.title+"\". url: " + source.url)
+			options.url = source.url;
+		}
 	}
-	if (options.randomSource || !source) {
-		source = rand.array(_sources); 
-		DEBUG && log("Randomly chose: \""+source.title+"\". url: " + source.url)
+	else
+	{
+		source = {
+			url: INTERNAL_DICT,
+			title: "Hacker's Dictionary",
+			lang_iso: "en",
+			lang: "English"
+		};
 		options.url = source.url;
 	}
 	DEBUG && log("source is \""+source.title+"\"");
 	options.lang_iso = source.lang_iso || 'en'; // assume english if missing
 
-	const generatorType = options.generatorType || "words";
 
 	// fetch source from cache/ local storage
 	getUrlCache(options.url, generatorType, function(sourceObj) {
@@ -302,11 +333,12 @@ function generatePasswords(request, sender, responseCB) {
 		if (!sourceObj.generator) {
 			// most of the time
 
-			var learnOptions = _.extend({}, _learnOptions);
+			var learnOptions = _.extend({lang_iso: options.lang_iso}, _learnOptions);
 
 			// make a new generator
 			switch (generatorType) {
 				case "words":
+				case "en-words":
 					generator = new Dict();
 					break;
 				case "phrase":

@@ -90,24 +90,21 @@ ext.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 function onOptionsUpdated() {
 
+	$('#generator-type').val(_options.generatorType || 'words')
+	$('#strength').val(_options.passwordStrength || 44).copyValToNext();
+
 	var val = $($('#sources').children().get(0)).val(); // == "random"
 	if (!_.isEmpty(_options.source_url))
 		val = _options.source_url;
-	$('#sources').val(val);
-	$('#num-words').val(_options.numWords || 4).copyValToNext();
-	$('#rand-words').val(_options.randomizeNumWords || 1).copyValToNext();
-	$('#min-len').val(_options.minWordLen || 5).copyValToNext();
-	$('#max-len').val(_options.maxWordLen || 10).copyValToNext();
-	$('#separator').val(_options.separator || ' ');
+	$('#sources').val(val);// TODO. Ensure val actually exists in #sources list (eg. when Data Reset happens, this fails)
+	$('#sources-label').show(_options.generatorType !== 'en-words');// hide for 'hacker's dictionary'
 }
 
 function saveOptions() {
+	_options.generatorType = $('#generator-type').val();
+	_options.passwordStrength = $('#strength').val();
 	_options.source_url = $('#sources').val();
-	_options.numWords = parseInt($('#num-words').val());
-	_options.randomizeNumWords = parseInt($('#rand-words').val());
-	_options.minWordLen = parseInt($('#min-len').val());
-	_options.maxWordLen = parseInt($('#max-len').val());
-	_options.separator = $('#separator').val();
+	$('#sources-label').show(_options.generatorType !== 'en-words');// hide for 'hacker's dictionary'
 	sendMessage({action: 'gp-optionsChanged', options: _options}, ext.logLastErrorCB('saveOptions'))
 }
 
@@ -124,7 +121,7 @@ function onSourcesUpdated(sources) {
 	sources.forEach(function(source) {
 		html += "<option value=\""+source.url+"\">"+_.htmlEncode(source.title)+"</option>\n"
 	})
-	$('#sources').appendHtml(html).val(selected);
+	$('#sources').appendHtml(html).val(selected);// TODO. Ensure selected still actually exists in #sources list 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +182,7 @@ function getGutenEBookUrl(source) {
 	//		https://www.gutenberg.org/ebooks/16328.txt.utf-8 ==> https://www.gutenberg.org/ebooks/16328
 	var results = source.url.match(/\/(\d+)[\/\.\-]/);
 	if (!results || results.length<2)
-		return null;
+		return; 
 	var bookId = results[1]; // result[0] === "/1234/"    result[1] === "1234"
 	return "https://www.gutenberg.org/ebooks/" + bookId;
 
@@ -231,9 +228,9 @@ function generate() {
 			title += " (" + meta.source.lang + ")";
 
 		$('#source>#title').text(title) // NB: htmlEncode not needed for text()
-			.attr('href', getGutenEBookUrl(meta.source)) 
 			.attr('data-url', meta.source.url)
-			.attr('data-lang', meta.source.lang_iso);
+			.attr('data-lang', meta.source.lang_iso)
+			.attr('href', getGutenEBookUrl(meta.source));
 		$('#source>#delete').disable(_.isEmpty(meta.source.url));
 	})
 }
@@ -348,8 +345,8 @@ $('#sources').on("change", function(e) {
 	  }, 
 	  function() {
 	  	ext.logLastError('gp-setSource');
-	  	setTimeout(generate,10); // call generate in a little bit
 	  });
+	doSaveDelay();
 })
 
 // ranges
@@ -369,7 +366,7 @@ $('input[type="range"]').on("input", function(){
 		$(this).copyValToNext();
 		doSaveDelay();
 	}).copyValToNext();
-$('select#separator').on('change', function(e) {
+$('#separator,#generator-type').on('change', function(e) {
 	doSaveDelay();
 });
 

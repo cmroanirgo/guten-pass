@@ -44,7 +44,8 @@ function extend(origin) { // copied from electron-api-demos/node_modules/glob/gl
 var _defaultLearnOptions = {
 	minWordLen: 3,
 	maxWordLen: 20,
-	validator: defaultValidator
+	validator: defaultValidator,
+	lang_iso: 'en'
 };
 var _defaultCreateOptions = {
 	numWords: 4,
@@ -62,13 +63,10 @@ function RootDict() {
 
 
 RootDict.prototype.reset = function() {
-	this._totalUsage = 0;
-	this._wordCount = 0;
-	this._alphaLetterCount    = 0; // a-z
-	this._alphaCapLetterCount = 0; // A-Z
-	this._numbersCount        = 0; // 0-9
-	this._symbolLetterCount   = 0; // eg &*^%$/{}
-	this._nonAlphaLetterCount = 0; // greek, chinese chars >127
+	//this._rawWordCount = 0; // # words in source. NOT unique NOT USED
+	this._wordCount = 0; // # unique words
+	//this._englishWordCount = 0; // # unique words found in english5000 // NOT USED
+	this._lang_iso = 'en';
 	this._words = { }; // a map of word to usage eg. 'funkyword':1
 };
 
@@ -78,9 +76,15 @@ RootDict.prototype.createWords = function(options) {
 	if (options.minWordLen>=options.maxWordLen)
 		throw new Error("Minimum word length ("+options.minWordLen+") should be shorter than the maximum word length ("+options.maxWordLen+")")
 
+	var src_englishWordCount = 0;
 	var src_words = Object.keys(this._words).filter(function(word) {
 		// make sure the list has only words of the right length
-		return word.length>=options.minWordLen && word.length<=options.maxWordLen;
+		if (word.length>=options.minWordLen && word.length<=options.maxWordLen) {
+			if (english.is(word))
+				src_englishWordCount++;
+			return true;
+		}
+		return false;
 	})
 
 
@@ -94,11 +98,22 @@ RootDict.prototype.createWords = function(options) {
 
 	var targetStrength = options.passwordStrength || 44;
 
+	// NB: NB: NB: src_englishWordCount <= english.size (by definition)
+	var entropyDictionarySize;
+	if (src_englishWordCount === src_words.length)
+		// ALL are english words. unlikely
+		// so, use the smaller
+		entropyDictionarySize = src_englishWordCount;
+	else
+		// this dict has words NOT found in the standard dictionary. This is good. This is expected for this project
+		entropyDictionarySize = english.size - src_englishWordCount + src_words.length;
+
+
 	//TODO. make this strength based
 	var words = [];
 	var strength = 0;
-	var strengthBoost = false; // allocated when symbols exist in the text, but not part of english, each word is added as 'brute_force' type entropy
-	var allNonEnglish = true; // assume all words are NOT english. If so, the maximum dict is used
+	//var strengthBoost = false; // allocated when symbols exist in the text, but not part of english, each word is added as 'brute_force' type entropy
+	//var allNonEnglish = true; // assume all words are NOT english. If so, the maximum dict is used
 	//var numWords = (options.numWords || 4) + (options.randomizeNumWords>0 ? rand(0, options.randomizeNumWords): 0);
 	while (strength<targetStrength && src_words.length>0){
 		var attempts = 50; // 50 attempts to find unique words 
@@ -114,6 +129,11 @@ RootDict.prototype.createWords = function(options) {
 //			log.error("Not enough source text to generate a word. Decrease accuracy &/or required word length or add more words");
 			targetStrength = 0;
 		else {
+
+			strength = entropy.wordpick(words.length, entropyDictionarySize, num_sep_symbols);
+
+
+			/*
 			// increase the strength if it's english source but NOT in the english dict
 			if (!english.is(w))
 				strengthBoost = true; // once it's on, it's on for the rest of the strength calcs, even if the other words are just ordinary english
@@ -135,6 +155,7 @@ RootDict.prototype.createWords = function(options) {
 				sourceLength = Math.min(src_words.length, english.size);
 
 			strength = entropy.wordpick(words.length, sourceLength, num_sep_symbols);
+			*/
 		}
 	}
 
@@ -143,11 +164,13 @@ RootDict.prototype.createWords = function(options) {
 	return {
 		password: words.join(sep),
 		stats : {
-			sourceWordCountMax:  this._wordCount,
-			sourceWordCount:     src_words.length,
-			wordCount:           words.length,
-			sepCount: 		     num_sep_symbols, 
-			strength:            strength,
+			sourceWordCountMax:  	this._wordCount,
+			sourceWordCount:     	src_words.length,
+			englishSourceWordCount: src_englishWordCount,
+			uniqueSourceWordCount: 	src_words.length-src_englishWordCount,
+			wordCount:              words.length,
+			sepCount: 		     	num_sep_symbols, 
+			strength:            	strength,
 			//pctAlphaNum:    100*this._alphaNumLetterCount / totalLetters,
 			//pctSymbols:     100*this._symbolLetterCount / totalLetters,
 			//pctNonAlpha:    100*this._nonAlphaLetterCount / totalLetters
@@ -161,7 +184,8 @@ RootDict.prototype.learn = function(phrase, options) {
 	options = options || {};
 	if (typeof options === 'function')
 		options = { validator: options };
-	options = extend({}, _defaultLearnOptions, options);
+	options = extend({ }, _defaultLearnOptions, options);
+	this._lang_iso = options.lang_iso;
 
 	// perform basic validation on the input string (eg. remove nonword chars, convert to lowercase)
 	if (options.validator)
@@ -187,17 +211,13 @@ RootDict.prototype.learn = function(phrase, options) {
 	all_words.forEach(function(word) {
 		_this._words[word] = (_this._words[word] || 0)+1; 
 		if (_this._words[word] === 1) {
-			// this is a new word. gather some extra stats
-			var stats = getLetterStats(word);
+			// this is a new word. build some extra stats
 			_this._wordCount++;
-			//_this._alphaNumLetterCount += stats.alphaNum; // !! These will max out at Number.MAX_VALUE !? ASSUME ASSUME we don't get anywhere near these however
-			_this._alphaLetterCount    += stats.alpha; 
-			_this._alphaCapLetterCount += stats.alphaCap; 
-			_this._numbersCount        += stats.num; 
-			_this._symbolLetterCount   += stats.symbols;
-			_this._nonAlphaLetterCount += stats.nonAlpha;
+
+			//if (english.is(word))
+			//	_this._englishWordCount++; NOT USED
 		}
-		_this._totalUsage++;
+		//_this._rawWordCount++; // NOT USED
 	})
 	return phrase;
 };
