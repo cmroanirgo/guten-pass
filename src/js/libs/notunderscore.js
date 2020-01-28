@@ -2,7 +2,7 @@
  * not_.js
  * license AGPL
  * Copyright (c) 2017 Craig Monro (cmroanirgo), kodespace.com. All rights reserved.
- * v1.5
+ * v1.5b
  **/
 // a lighter use for underscore. ie just helper functions, really
 'use strict';
@@ -48,6 +48,14 @@ var n_ = {
     }
 
     return target;
+}
+, round: function round(val, num_decimals) {
+	// num_decimals=3 --> 1000 === rounds to 3 dec places
+	// num_decimals=-2 ==> 0.01 ==> rounds to nearest 100
+	if (num_decimals===undefined) num_decimals = 2;
+	var to = Math.pow(10, num_decimals); 
+	return Math.round(val*to)/to;
+
 }
 , htmlEncode: function(html) { return (!!html && html.length ? html.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/&/g, "&amp;").replace(/\"/g, '&#34;').replace(/\'/g, '&#39;') : ''); }
 , dump: function (obj) { 
