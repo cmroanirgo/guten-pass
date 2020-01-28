@@ -13,7 +13,6 @@
 
 var rand = require('./crypto-random');
 var defaultValidator = require('./validators').default;
-var getLetterStats = require('./stats').letter;
 var entropy = require('./entropy');
 var english = require('./english');
 var _ = require('./notunderscore.js');
@@ -109,12 +108,8 @@ RootDict.prototype.createWords = function(options) {
 		entropyDictionarySize = english.size - src_englishWordCount + src_words.length;
 
 
-	//TODO. make this strength based
 	var words = [];
 	var strength = 0;
-	//var strengthBoost = false; // allocated when symbols exist in the text, but not part of english, each word is added as 'brute_force' type entropy
-	//var allNonEnglish = true; // assume all words are NOT english. If so, the maximum dict is used
-	//var numWords = (options.numWords || 4) + (options.randomizeNumWords>0 ? rand(0, options.randomizeNumWords): 0);
 	while (strength<targetStrength && src_words.length>0){
 		var attempts = 50; // 50 attempts to find unique words 
 		do
@@ -128,39 +123,11 @@ RootDict.prototype.createWords = function(options) {
 		if (!attempts)
 //			log.error("Not enough source text to generate a word. Decrease accuracy &/or required word length or add more words");
 			targetStrength = 0;
-		else {
-
+		else
 			strength = entropy.wordpick(words.length, entropyDictionarySize, num_sep_symbols);
-
-
-			/*
-			// increase the strength if it's english source but NOT in the english dict
-			if (!english.is(w))
-				strengthBoost = true; // once it's on, it's on for the rest of the strength calcs, even if the other words are just ordinary english
-			else
-				allNonEnglish = false;
-
-			var sourceLength = 0;
-			if (strengthBoost) {
-				if (allNonEnglish) // options.lang_iso !== "en" )
-					sourceLength = src_words.length + english.size;
-				else
-					// try to quantify an expanded english dictionary. 
-					// This is Pure fudgeness (&the proper way would be to compare all source words with the english dict)
-					// TODO. Build a count of nonEnglish words during learn() mode & do this properly
-					sourceLength = src_words.length/2 + english.size;
-			}
-			else
-				// all words are english. use the minimum of english dict OR this book's text (this will give a 'worst cast' scenario)
-				sourceLength = Math.min(src_words.length, english.size);
-
-			strength = entropy.wordpick(words.length, sourceLength, num_sep_symbols);
-			*/
-		}
 	}
 
 	// return extra meta-info about the dictionary and the result set.
-	var totalLetters = this._alphaNumLetterCount + this._symbolLetterCount + this._nonAlphaLetterCount;
 	return {
 		password: words.join(sep),
 		stats : {
