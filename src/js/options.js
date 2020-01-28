@@ -129,8 +129,6 @@ function saveOptions() {
 }
 
 
-function round(val) { return Math.round(val*1000)/1000; } 
-
 
 $.register({
 	appendHtml: function(html) { // appends child
@@ -217,7 +215,7 @@ function generate() {
 		var words = response.words;
 		var meta = response.meta;
 		var t1 = performance.now();
-		DEBUG && log('generated in '+round(t1-t0)+'ms : ' + words);
+		DEBUG && log('generated in '+_.round(t1-t0)+'ms : ' + words);
 		$('#result').val(words[0]);
 		updateBytesUsed();
 	

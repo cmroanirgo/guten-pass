@@ -154,7 +154,6 @@ $.register({
 	}		
 });
 
-function round(val) { return Math.round(val*1000)/1000; } 
 
 
 /*function htmlToElement(html) {
@@ -213,7 +212,7 @@ function generate() {
 		var meta = response.meta;
 
 		var t1 = performance.now();
-		DEBUG && log('generated in '+round(t1-t0)+'ms:', data, meta);
+		DEBUG && log('generated in '+_.round(t1-t0)+'ms:', data, meta);
 
 		$('#password-1').setPassword(0, data);
 		$('#password-2').setPassword(1, data);
@@ -304,10 +303,8 @@ $.register({
 		var strengthEl = el.nextElementSibling.nextElementSibling;
 		$('.line', strengthEl).css('width', (ent*2)+'px').css('background-color', color);
 
-		ent = statslib.round(ent,0);
-		//ent_db_dictionary = statslib.round(ent_db_dictionary,0);
-		//ent_std = statslib.round(ent_std,0);
-		$('.value', strengthEl).text(ent/* + ' : ' + ent_db_dictionary +' : ' + ent_std*/);
+		ent = _.round(ent,0);
+		$('.value', strengthEl).text(ent);
 		return this;
 	}
 })

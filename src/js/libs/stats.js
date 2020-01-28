@@ -94,17 +94,7 @@ function getLanguageExtraCharCount(lang) {
 
 
 
-function round(val, num_decimals) {
-	// num_decimals=3 --> 1000 === rounds to 3 dec places
-	// num_decimals=-2 ==> 0.01 ==> rounds to nearest 100
-	if (num_decimals===undefined) num_decimals = 2;
-	var to = Math.pow(10, num_decimals); 
-	return Math.round(val*to)/to;
-
-}
-
 module.exports = {
-	round: round,
 	langExtraCharCount: getLanguageExtraCharCount,
 	letter: getLetterStats
 };
