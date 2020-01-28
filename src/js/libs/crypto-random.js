@@ -35,7 +35,12 @@ function _random(min, max) {
 _random.array = function(ar, defaultVal) {
 	if (!ar || !ar.length || ar.length<1)
 		return defaultVal;
-	return ar[_random(0, ar.length)];
+	if (typeof ar === 'string') {
+		var arCodePoints = [...ar]; // this is so that emojis, etc work
+		return arCodePoints[_random(0, arCodePoints.length)];
+	}
+	else
+		return ar[_random(0, ar.length)];
 }
 
 module.exports = _random;
