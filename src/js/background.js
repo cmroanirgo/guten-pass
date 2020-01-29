@@ -14,6 +14,7 @@ const storage = ext.storage;
 const $ = ext.$;
 const _ = ext._;
 const Dict = require('./libs/dict');
+const Phraser = require('./libs/phraser');
 const validators = require('./libs/validators');
 const fetchSource = require('./libs/fetch');
 const rand = require('./libs/crypto-random');
@@ -342,6 +343,9 @@ function generatePasswords(request, sender, responseCB) {
 					generator = new Dict();
 					break;
 				case "phrase":
+					generator = new Phraser();
+					break;
+
 				case "leet":
 				default:
 					log.error("Not implemented, generatorType="+generatorType);
