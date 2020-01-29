@@ -35,13 +35,17 @@ function _random(min, max) {
 _random.array = function(ar, defaultVal) {
 	if (!ar || !ar.length || ar.length<1)
 		return defaultVal;
-	if (typeof ar === 'string') {
-		//var arCodePoints = [...ar]; // this is so that emojis, etc work
-		var arCodePoints = Array.from(ar);
-		return arCodePoints[_random(0, arCodePoints.length)];
-	}
+	if (typeof ar === 'string') 
+		return _random.string(ar, defaultVal);
 	else
 		return ar[_random(0, ar.length)];
+}
+
+_random.string = function(str, defaultVal) {
+	if (!ar || !ar.length || ar.length<1)
+		return defaultVal;
+	var arCodePoints = Array.from(str); // this is so that emojis & unicode work
+	return arCodePoints[_random(0, arCodePoints.length)];
 }
 
 module.exports = _random;
