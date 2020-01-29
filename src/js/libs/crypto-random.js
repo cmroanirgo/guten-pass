@@ -36,7 +36,8 @@ _random.array = function(ar, defaultVal) {
 	if (!ar || !ar.length || ar.length<1)
 		return defaultVal;
 	if (typeof ar === 'string') {
-		var arCodePoints = [...ar]; // this is so that emojis, etc work
+		//var arCodePoints = [...ar]; // this is so that emojis, etc work
+		var arCodePoints = Array.from(ar);
 		return arCodePoints[_random(0, arCodePoints.length)];
 	}
 	else
