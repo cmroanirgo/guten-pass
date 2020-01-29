@@ -12,7 +12,7 @@
 // This will probably be a more memory hungry solution.
 
 var rand = require('./crypto-random');
-var defaultValidator = require('./validators').default;
+var defaultValidator = require('./validators').multilingual;
 var entropy = require('./entropy');
 var english = require('./english');
 var _ = require('./notunderscore.js');
@@ -147,33 +147,30 @@ RootDict.prototype.createWords = function(options) {
 
 
 
-RootDict.prototype.learn = function(phrase, options) {
-	options = options || {};
-	if (typeof options === 'function')
-		options = { validator: options };
+RootDict.prototype.learn = function(text, options) {
 	options = extend({ }, _defaultLearnOptions, options);
 	this._lang_iso = options.lang_iso;
 
 	// perform basic validation on the input string (eg. remove nonword chars, convert to lowercase)
 	if (options.validator)
-		phrase = options.validator.call(this, phrase);
+		text = options.validator.call(this, text);
 
 	// build a regExp to exclude all words < options.minWordLen and >options.maxWordLen
 	if (options.minWordLen>0) {
 		var minStr = "(?:^| )([^ ]{1," + Math.max(0,options.minWordLen-1) + "})(?=$| )"
 		var reMin = new RegExp(minStr, "gi");
-		phrase = phrase.replace(reMin, ' ');
+		text = text.replace(reMin, ' ');
 	}
 	if (options.maxWordLen>0) {
 		var maxStr = "(?:^| )([^ ]{" + (options.maxWordLen+1) + ",})(?=$| )"
 		var reMax = new RegExp(maxStr, "gi");
-		phrase = phrase.replace(reMax, ' ');
+		text = text.replace(reMax, ' ');
 	}
 	// get rid of excessive whitespace
-	phrase = phrase.replace(/ {2,}/g, ' ').trim(); 
+	text = text.replace(/ {2,}/g, ' ').trim(); 
 
 	// add what's left to our dictionary
-	var all_words = phrase.split(' ');
+	var all_words = text.split(' ');
 	var _this = this;
 	all_words.forEach(function(word) {
 		_this._words[word] = (_this._words[word] || 0)+1; 
@@ -186,7 +183,7 @@ RootDict.prototype.learn = function(phrase, options) {
 		}
 		//_this._rawWordCount++; // NOT USED
 	})
-	return phrase;
+	return text;
 };
 
 
