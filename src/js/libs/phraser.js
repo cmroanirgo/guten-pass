@@ -6,7 +6,7 @@
 'use strict';
 
 var rand = require('./crypto-random');
-var defaultValidator = require('./validators').default;
+var validators = require('./validators');
 var entropy = require('./entropy');
 var _ = require('./notunderscore.js');
 var log = require('./log').registerLogPROD('phaser')
@@ -16,6 +16,8 @@ const DEBUG = true && !_PRODUCTION;
  	plucks sentences out of a source text.
  	It's as much experiemental as anything
 */
+
+
 
 
 /*
@@ -43,7 +45,6 @@ Now, for the threat model of attacker trying dictionary attacks or brute force, 
 var _defaultLearnOptions = {
 	minWordLen: 3,
 	maxWordLen: 20,
-	validator: defaultValidator,
 	lang_iso: 'en'
 };
 var _defaultCreateOptions = {
@@ -84,10 +85,9 @@ function Phraser() {
 }
 
 Phraser.prototype.reset = function() {
-	this._text = '';
+	this._phrases = [];
 	this._lang_iso = 'en';
 	this._wordCount = 0;
-	this._cache = {text:''}; // used during createWords
 };
 
 Phraser.prototype.createWords = function(options) {
@@ -96,7 +96,71 @@ Phraser.prototype.createWords = function(options) {
 	if (options.minWordLen>=options.maxWordLen)
 		throw new Error("Minimum word length ("+options.minWordLen+") should be shorter than the maximum word length ("+options.maxWordLen+")")
 
-	if (!this._cache.text.length || this._cache.minWordLen != options.minWordLen || this._cache.maxWordLen != options.maxWordLen) 
+	var targetStrength = options.passwordStrength || 44;
+
+	var src_wordCount = this._wordCount; // we dont mess with this
+
+	var words='';
+	var strength = 0;
+
+	function calcStrength(phrase) {
+		return entropy.standard(countWords(phrase), src_wordCount); // TODO. This is wrong. it's actually !!!! entropy.standard(1, src_wordCount-numWords+1); which gets worse
+		//return entropy.standard(1, src_wordCount - countWords(phrase) + 1);
+	}
+
+	var attempts = 50;
+	while (strength<targetStrength && this._phrases.length>0 && attempts-->0){
+		words = rand.array(this._phrases, '');
+		strength = calcStrength(words);
+
+		var ar = words.split(' ');
+		var lastWord = '';
+		while (strength>=targetStrength && ar.length>2) {
+			// trim the last word
+			if (ar.length>10) {
+				lastWord = ar[10];
+				ar = ar.slice(0, 10);
+			}
+			else {
+				lastWord = ar[ar.length-1];
+				ar = ar.slice(0, -1);
+			}
+			words = ar.join(' ');
+			strength = calcStrength(words);
+		}
+
+		if (lastWord.length>0) {
+			// we trimmed too many words & now we're under-strength!
+			// put the last word back on
+			words += ' ' + lastWord;
+			strength = calcStrength(words);
+		}
+
+		/*
+		This code assumes (correctly) that entropy inceases when less words are chosen
+		... but we;re fudging results & can't make these assumptions
+		if (strength<targetStrength) {
+			// try and beef it up by removing shorter words
+			words = trimWords(words, options);
+			strength = calcStrength(words);
+		}
+
+		var ar = words.split(' ');
+		while (strength<targetStrength && ar.length>2) {
+			// trim the last word
+			if (ar.length>10)
+				ar = ar.slice(0, 10);
+			else
+				ar = ar.slice(0, -1);
+			words = ar.join(' ');
+			strength = calcStrength(words);
+		}
+		*/
+	}
+
+
+/*
+	if (!this._cache || this._cache.minWordLen != options.minWordLen || this._cache.maxWordLen != options.maxWordLen) 
 	{
 		this._cache = {
 				text: trimWords(this._text, options),
@@ -111,8 +175,6 @@ Phraser.prototype.createWords = function(options) {
 	// use cache
 	const src_words = this._cache.text;
 	const src_wordCount = this._cache.count;
-
-	var targetStrength = options.passwordStrength || 44;
 
 	var end = src_words.length-200;
 	if (end < 200)
@@ -134,7 +196,7 @@ Phraser.prototype.createWords = function(options) {
 		strength = entropy.standard(numWords, src_wordCount); // TODO. This is wrong. it's actually !!!! entropy.standard(1, src_wordCount-numWords); which gets worse
 		// TODO. compare against entropy.pickwords() and use worst
 	}
-
+*/
 
 	DEBUG && log('generated in '+_.round(performance.now()-t0)+'ms');
 	return {
@@ -143,9 +205,6 @@ Phraser.prototype.createWords = function(options) {
 			sourceWordCountMax:  	this._wordCount,
 			sourceWordCount:     	src_wordCount,
 			strength:            	strength,
-			//pctAlphaNum:    100*this._alphaNumLetterCount / totalLetters,
-			//pctSymbols:     100*this._symbolLetterCount / totalLetters,
-			//pctNonAlpha:    100*this._nonAlphaLetterCount / totalLetters
 		}
 	}
 
@@ -154,22 +213,20 @@ Phraser.prototype.createWords = function(options) {
 
 Phraser.prototype.learn = function(text, options) {
 	const t0 = performance.now();
-	options = options || {};
-	if (typeof options === 'function')
-		options = { validator: options };
 	options = _.extend({ }, _defaultLearnOptions, options);
 	this._lang_iso = options.lang_iso;
 
 	// perform basic validation on the input string (eg. remove nonword chars, convert to lowercase)
-	if (options.validator)
-		text = options.validator.call(this, text);
+//	if (options.validator)
+//		text = options.validator.call(this, text);
+	text = validators.gutenbergTrim(text);
 
-	text = trimWords(text, options)
+	//text = trimWords(text, options)
 	// add what's left to our dictionary
-	this._text = text;
+	//this._text = text;
+	this._phrases = text.split(".").map(function(text) { return validators.multilingual(text.trim()).trim(); });
 	this._wordCount = countWords(text);
-	const t1 = performance.now();
-	DEBUG && log('learnt in '+_.round(t1-t0)+'ms');
+	DEBUG && log('learnt in '+_.round(performance.now()-t0)+'ms');
 
 };
 

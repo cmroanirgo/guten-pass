@@ -40,8 +40,7 @@ var _currentOptions = {
 };
 var _learnOptions = { // keep words from 3 to 2 chars long. These signify the MAXiMUM values
 	minWordLen: 3,
-	maxWordLen: 20,
-	validator: validators.gutenberg
+	maxWordLen: 20
 };
 
 
@@ -377,19 +376,17 @@ function generatePasswords(request, sender, responseCB) {
 							responseCB({error: err});
 							return;
 						}
-						// clean up the text
-						if (source.validator)
-							options.validator = source.validator;
-						var validator = options.validator || _learnOptions.validator;
-						if (validator)
-							text = validator(text);
+						// clean up the text.
+						// ONLY remove gutenberg preamble, which gets in the way of foreign language texts
+						// EVERYTHING else is left in place
+						text = validators.gutenbergTrim(text);
 
 						sourceObj.text = text;
 						setUrlCache(options.url, sourceObj)
-						sourceObj.text = undefined; // we have the generator. no need to keep the raw text in memory (& setUrlCache stores to disk)
 
 						DEBUG && log('learning...')
 						generator.learn(text, learnOptions);	
+						sourceObj.text = undefined; // we have the generator. no need to keep the raw text in memory (& setUrlCache stores to disk)
 						DEBUG && log('generating...')
 						_generate(generator)	
 					}
