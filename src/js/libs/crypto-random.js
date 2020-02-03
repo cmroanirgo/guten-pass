@@ -42,9 +42,9 @@ _random.array = function(ar, defaultVal) {
 }
 
 _random.string = function(str, defaultVal) {
-	if (!ar || !ar.length || ar.length<1)
+	if (!str || !str.length || str.length<1)
 		return defaultVal;
-	var arCodePoints = Array.from(str); // this is so that emojis & unicode work
+	var arCodePoints = Array.from(str); // this is so that emojis & unicode work. each element is a character 'string'
 	return arCodePoints[_random(0, arCodePoints.length)];
 }
 
