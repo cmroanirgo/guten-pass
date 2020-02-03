@@ -212,11 +212,11 @@ function generate() {
 			return;
 		}
 
-		var words = response.words;
-		var meta = response.meta;
+		const data = response.data;
+		const pwd = data[0].password;
 		var t1 = performance.now();
-		DEBUG && log('generated in '+_.round(t1-t0)+'ms : ' + words);
-		$('#result').val(words[0]);
+		DEBUG && log('generated in '+_.round(t1-t0)+'ms');
+		$('#result').val(pwd);
 		updateBytesUsed();
 	
 	/*	var accuracy = parseInt($('#accuracy').val());
