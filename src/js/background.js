@@ -316,7 +316,7 @@ function generatePasswords(request, sender, responseCB) {
 	{
 		source = {
 			url: INTERNAL_DICT,
-			title: "Hacker's Dictionary",
+			title: "Common English Words Dictionary",
 			lang_iso: "en",
 			lang: "English"
 		};

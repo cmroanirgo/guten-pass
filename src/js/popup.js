@@ -97,14 +97,14 @@ function onOptionsUpdated() {
 	if (!_.isEmpty(_options.source_url))
 		val = _options.source_url;
 	$('#sources').val(val);// TODO. Ensure val actually exists in #sources list (eg. when Data Reset happens, this fails)
-	$('#sources-label').show(_options.generatorType !== 'en-words');// hide for 'hacker's dictionary'
+	$('#sources-label').show(_options.generatorType !== 'en-words');// hide for 'common dictionary'
 }
 
 function saveOptions() {
 	_options.generatorType = $('#generator-type').val();
 	_options.passwordStrength = $('#strength').val();
 	_options.source_url = $('#sources').val();
-	$('#sources-label').show(_options.generatorType !== 'en-words');// hide for 'hacker's dictionary'
+	$('#sources-label').show(_options.generatorType !== 'en-words');// hide for 'common dictionary'
 	sendMessage({action: 'gp-optionsChanged', options: _options}, ext.logLastErrorCB('saveOptions'))
 }
 
@@ -212,7 +212,7 @@ function generate() {
 		var meta = response.meta;
 
 		var t1 = performance.now();
-		DEBUG && log('generated in '+_.round(t1-t0)+'ms:', data, meta);
+		DEBUG && log('generated in '+_.round(t1-t0)+'ms');
 
 		$('#password-1').setPassword(0, data);
 		$('#password-2').setPassword(1, data);
@@ -304,7 +304,8 @@ $.register({
 		$('.line', strengthEl).css('width', (ent*2)+'px').css('background-color', color);
 
 		ent = _.round(ent,0);
-		$('.value', strengthEl).text(ent);
+		//var brute_ent = _.round(entropy.bruteforce(data[idx].password),0);
+		$('.value', strengthEl).text(ent);// + ' => ' + brute_ent);
 		return this;
 	}
 })
