@@ -108,12 +108,110 @@ function countBits(num) { // don't use. ambiguous. use standard(1, num) instead
 	return log2(num);
 }
 
+
+const METHOD_STD     = 0; // assumes a fully unicode capabable storage and usage of a password
+const METHOD_7BIT    = 1; // assumes that unicode is not supported, and that a string is assumed as ASCII. (This makes a UTF32 string have more ASCII chars)
+const METHOD_STRIP   = 2; // assumes the worst kind of unicode support: removes any non-ASCII entirely.
+const METHOD_16BYTES = 3; // truncate any string to 16 (ASCII) chars. automatically uses the minimum entropy of the METHOD_7BIT and METHOD_STRIP
+
+
+function strto7bit(str) {
+	// the string needs to be ASCII-fied by removing top bit of each byte
+	var temp = '';
+	for (var i=0; i<str.length; i++) {
+		temp += String.fromCharCode(str.charCodeAt(i) & 0x7f);
+	}
+	return temp;
+}
+
+function stripunichars(str) {
+	// strips the unicode chars from a string and only keeps the ASCII chars
+	var temp = '';
+	const ar = Array.from(str); // this is so that emojis & unicode work by converting to codepoints
+	for (var i=0; i<ar.length; i++) {
+		if (ar[i].charCodeAt(0)<127)
+			temp += ar[i];
+	}
+	return temp;
+}
+
+/*
+given a password, calcs the brute force strength
+*/
+const bruteZones = [
+	{ re:/[a-z]/, count:26}, // Lower Case
+	{ re:/[A-Z]/, count:26}, // Upper Case
+	{ re:/[0-9]/, count:10}, // Numbers
+	{ re:/[\!\@\#\$\%\^\&\*\(\)]/, count:10}, // Symbols above Num Keys
+	{ re:/[\[\]\\\{\}\|\;\'\:\"\,\.\/\<\>\?\`\~\-\=\_\+]/, count:22} // other Symbols
+];
+
+function bruteforce(str, method) {
+	if (str.length<1)
+		return 1;
+
+	if (method===undefined)
+		method = METHOD_16BYTES;
+
+	// test strings
+	// 		الاتصال دراسته مسيرة لفترة
+	//		publicació ábrica cuestió érprete
+	switch (method || 0){ // see METHOD_xxxx
+		case METHOD_7BIT:
+			// the string needs to be ASCII-fied by removing top bit of each byte
+			str = strto7bit(str);
+			break;
+
+		case METHOD_STRIP:
+			// strips the unicode chars from a string and only keeps the ASCII chars
+			str = stripunichars(str);
+			break;
+
+		case METHOD_16BYTES:
+			var str7bit = strto7bit(str);
+			if (str7bit.length>16)
+				str7bit = str7bit.slice(0,16);
+			var strstrip = stripunichars(str);
+			if (strstrip.length>16)
+				strstrip = strstrip.slice(0,16);
+			var ent7bit = bruteforce(str7bit, METHOD_STD);
+			var entstrip = bruteforce(strstrip, METHOD_STD);
+			return Math.min(ent7bit, entstrip);
+			break;
+	}
+
+	var symbolcount = 0;
+
+	const arCodePoints = Array.from(str); // this is so that emojis & unicode work by converting to an array of chars based on codepoints. The chars are really strings
+	for (var i=0; i<arCodePoints.length; i++) {
+		if (arCodePoints[i].charCodeAt(0)>127)
+			symbolcount += 1;
+	}
+
+	if (symbolcount===0) {
+		// no 'foreign' chars found
+		symbolcount += bruteZones.reduce(function(count, zone, idx) {
+			if (str.match(zone.re))
+				return count + zone.count;
+			return count;
+		}, 0)
+	}
+	else
+	{
+		// assume brute force must test upper, lower, numbers and all std symbols
+		symbolcount += 32 + 10 + 26 + 26;
+	}
+
+	return standard(str.length, symbolcount);
+}
+
 module.exports = {
 	//ENGLISH_DICT_SIZE: 2048, // # words in english dict. this gives E=44 for 4 words. 
 	ENGLISH_DICT_SIZE: 5000, // NB: We DON'T require('./english').size, so that the whole english dict won't be loaded uncessarily into popup or options
 	standard: standard,
 	//diceroll: diceroll,
 	wordpick: wordpick,
+	bruteforce: bruteforce,
 	countBits: countBits
 };
 
